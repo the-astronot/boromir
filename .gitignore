@@ -1,0 +1,22 @@
+# VirtualEnv
+.venv
+
+# Bins/Imgs
+*.bin
+*.tif
+*.tiff
+*.jpg
+*.jpeg
+*.png
+
+# C Stuff
+*.o
+*.so
+
+
+# Python
+__pycache__
+
+# Blender
+*.blend
+*.blend1
