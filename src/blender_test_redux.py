@@ -32,7 +32,8 @@ def read_from_file(filename,dtype=np.float32,cols=3):
 if __name__ == "__main__":
 	print("{}:Starting!".format(time.localtime()))
 
-	data_path = "/home/the-astronot/code/grad_school/project/src/"
+
+	data_path = "./"
 	image_path = os.path.join(data_path,"../images")
 	image_name = "lroc_color_poles.tif"
 	verts_file = "verts.bin"

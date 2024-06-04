@@ -316,7 +316,8 @@ if __name__ == "__main__":
 	quatWorldtoCam.fromDCM(array([[0,0,1],
 																[-1,0,0],
 																[0,-1,0]]))
-	sc_quat = Quaternion(0,[0,0,1])
+	#sc_quat = Quaternion(0,[0,0,1])
+	sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
 	quat = Quaternion()
 	#print(sc_quat)
@@ -325,13 +326,13 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([RADIUS*2,0,0])
+	pos = array([0,0,-RADIUS*2])
 	state = State(pos,quat)
 	
 	dem_file = "../images/big_dem.tif"
-	verts_file = "verts_redux.bin"
-	colors_file = "colors_redux.bin"
-	faces_file = "faces_redux.bin"
+	#verts_file = "verts_redux.bin"
+	#colors_file = "colors_redux.bin"
+	#faces_file = "faces_redux.bin"
 	dem_file_c = "../images/big_dem.bin"
 
 	print("Running Grassy Knoll")

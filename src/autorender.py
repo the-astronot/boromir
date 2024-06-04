@@ -206,7 +206,7 @@ if __name__ == "__main__":
 	# Moon config = [roughness, metallic, IOR, ]
 	moon_config = [1.0,0.0,1.450]
 	# Sun config = [Irradiance (W/m^2), Color(RGB 0-1), Angle(Rad)]
-	sun_config = [5,[1,1,1],0.009304]
+	sun_config = [20,[1,1,1],0.009304]
 	#sun_config = [100,[1,1,1],0.009304]
 	# Cam config = [focal_length,HNumPix,VNumPix,]
 	#cam_config = [102.1,1024,1024]
@@ -228,8 +228,9 @@ if __name__ == "__main__":
 
 
 	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
-	sc_quat = Quaternion(0,[0,0,1])
+	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
+	sc_quat = Quaternion(0.707,[0,-0.707,0])
 	quat = Quaternion()
 	#dcm = sc_quat.toDCM()@quatWorldtoCam.toDCM()
 	dcm = quatWorldtoCam.toDCM()@sc_quat.toDCM()
@@ -237,7 +238,7 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([RADIUS*2,0,0])
+	pos = array([0,0,-RADIUS*2])
 	#pos = array([RADIUS/4,-RADIUS,0])
 	state = State(pos,quat)
 
