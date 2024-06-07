@@ -150,6 +150,7 @@ def setup(moon_config,sun_config,camera_config,render_config):
 	sun.data.color = sun_config[1]
 	sun.data.angle = sun_config[2]
 	sun.data.use_contact_shadow = True
+	#sun.data.shadow_buffer_bias = 100
 	sun.data.shadow_trace_distance = np.inf
 	sun.data.shadow_cascade_max_distance = np.inf
 	sun.rotation_mode = "YXZ"
@@ -223,14 +224,15 @@ if __name__ == "__main__":
 	for lat in lats:
 		for lon in lons:
 			locations.append([lat,lon])
-	sun_angles = [x for x in range(0,31,5)]
+	sun_angles = [x for x in range(180,211,5)]
 	RADIUS = 1737400
 
 
 	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
 	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
-	sc_quat = Quaternion(0.707,[0,-0.707,0])
+	#sc_quat = Quaternion(0.707,[0,-0.707,0])
+	sc_quat = Quaternion(1,[0,0,0])
 	quat = Quaternion()
 	#dcm = sc_quat.toDCM()@quatWorldtoCam.toDCM()
 	dcm = quatWorldtoCam.toDCM()@sc_quat.toDCM()
@@ -238,11 +240,10 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([0,0,-RADIUS*2])
-	#pos = array([RADIUS/4,-RADIUS,0])
+	pos = array([-RADIUS*3,0,0])
 	state = State(pos,quat)
 
-	render([state],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"./outimages")
+	render([state],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"../outimages")
 	#old_render([3237.4],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"./outimages")
 	# Save Mainfile
 	#bpy.ops.wm.save_mainfile()

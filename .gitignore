@@ -20,3 +20,10 @@ __pycache__
 # Blender
 *.blend
 *.blend1
+
+# Random
+.nfs*
+core*
+
+# Logs
+*log*

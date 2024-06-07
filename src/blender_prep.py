@@ -317,8 +317,9 @@ if __name__ == "__main__":
 																[-1,0,0],
 																[0,-1,0]]))
 	#sc_quat = Quaternion(0,[0,0,1])
-	sc_quat = Quaternion(0.707,[0,-0.707,0])
+	#sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
+	sc_quat = Quaternion(1,[0,0,0])
 	quat = Quaternion()
 	#print(sc_quat)
 	dcm = sc_quat.toDCM().T@quatWorldtoCam.toDCM()
@@ -326,7 +327,7 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([0,0,-RADIUS*2])
+	pos = array([-3*RADIUS,0,0])
 	state = State(pos,quat)
 	
 	dem_file = "../images/big_dem.tif"

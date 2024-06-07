@@ -213,6 +213,10 @@ int findPoint(std::FILE* fp, float3 intercept, float2 mapsize, float* color, flo
 	// v = ((V_PIXELS-1)/2)-(V_PIXELS/180.*rad2deg(decl))
 	u = (ulong) round(((mapsize[0]-1)/2.0)+((mapsize[0]/(2*M_PI))*ra));
 	v = (ulong) round((mapsize[1]-1)/2.0)-((mapsize[1]/M_PI)*decl);
+	// ra = 2*pi*((u+.5)/U_PIXELS) - pi
+	// decl = -pi*((v+.5)/V_PIXELS) + pi/2
+	ra = 2.0*M_PI*(((float)u+0.5)/mapsize[0]) - M_PI;
+	decl = -M_PI*(((float)v+0.5)/mapsize[1]) + M_PI/2.0;
 	*color = (((mapsize[0]-1)/2.0)+((mapsize[0]/(2*M_PI))*ra))/mapsize[0];
 	*(color+1) = 1.0-((((mapsize[1]-1)/2.0)-((mapsize[1]/M_PI)*decl))/mapsize[1]);
 	//u = round(*color*mapsize[0]);
