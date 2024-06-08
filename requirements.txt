@@ -3,6 +3,5 @@ matplotlib
 numpy
 tqdm
 bpy
-mathutils
 pandas
 scikit-image

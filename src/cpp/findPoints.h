@@ -2,11 +2,9 @@
 #include <fstream>
 #include <string.h>
 #include "linalg.h"
+#include "common.h"
 
 using namespace linalg::aliases;
-
-#define ullong unsigned long long
-#define ulong unsigned long
 
 extern "C"{
 int uv2_los(float u, float v, float2 fov, float2 camsize, float3 *los);

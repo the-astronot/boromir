@@ -27,3 +27,7 @@ core*
 
 # Logs
 *log*
+
+# VSCode
+.vscode
+

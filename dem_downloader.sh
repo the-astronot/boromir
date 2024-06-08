@@ -15,7 +15,7 @@ download() {
 # MAIN CODE
 
 # File storage directory
-IMGDIR="data/"
+IMGDIR="maps/"
 
 # Albedo Map File
 ALBEDO_MAP="https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles.tif"
