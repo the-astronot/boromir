@@ -28,6 +28,8 @@ int findPoints(float position[3],
 	ulong idx;
 	float RADIUS = 1737400;
 
+	load_maps();
+
 	std::FILE* file = std::fopen(filename,"rb");
 	if (file != NULL) {
 		std::cout << "File opened" << std::endl;
@@ -60,6 +62,8 @@ int findPoints(float position[3],
 
 	std::fclose(file);
 
+	close_maps();
+
 	std::cout << "Writing to Files" << std::endl;
 
 	write_to_files(mesh,colors,meshsize,dirname);
@@ -82,10 +86,12 @@ int uv2_los(float u, float v, float2 fov, float2 camsize, float3* los) {
 	return 0;
 }
 
+/*
 int uv2vertid(ulong u, ulong v, ulong u_pixels, ulong* id) {
 	*id = v*u_pixels+u;
 	return 0; 
 }
+*/
 
 int vertIsNull(float* mesh) {
 	float thresh = 1;
@@ -196,10 +202,11 @@ int get_intersection(float3 pos, float3 los, float radius, float3* intercept) {
 
 int findPoint(std::FILE* fp, float3 intercept, float2 mapsize, float* color, float* point) {
 	// Get Moon UV
-	float r,decl,ra,radius;
-	ulong u,v;
-	ulong read_loc,idx;
-	short read_radius;
+	float r,radius;
+	double ra,decl;
+	//ulong u,v;
+	//ulong read_loc,idx;
+	//short read_radius;
 
 	r = sqrt(sum(pow(intercept,2)));
 	decl = asin(fmax(-1,fmin(intercept[2]/r,1)));
@@ -209,6 +216,7 @@ int findPoint(std::FILE* fp, float3 intercept, float2 mapsize, float* color, flo
 		// ra = arctan2(ijk[1]/(r*cos(decl)),ijk[0]/(r*cos(decl)))
 		ra = atan2(intercept[1]/(r*cos(decl)),intercept[0]/(r*cos(decl)));
 	}
+	/*
 	// u = ((U_PIXELS-1)/2)+(U_PIXELS/360.*rad2deg(ra))
 	// v = ((V_PIXELS-1)/2)-(V_PIXELS/180.*rad2deg(decl))
 	u = (ulong) round(((mapsize[0]-1)/2.0)+((mapsize[0]/(2*M_PI))*ra));
@@ -227,6 +235,15 @@ int findPoint(std::FILE* fp, float3 intercept, float2 mapsize, float* color, flo
 	std::fread(&read_radius,sizeof(short),1,fp);
 
 	radius = 1737400+0.5*(float)read_radius;
+	*/
+
+	// Trying out the new system
+	//std::cout << "RA is " << ra << ", Decl is " << decl << std::endl;
+	get_point(&ra,&decl,&radius);
+	//std::cout << "Radius is " << radius << std::endl;
+	*color = ra/(4*M_PI)+0.5;
+	*(color+1) = 0.5-(decl/(M_PI));
+	//std::cout << "Color location is (" << *color << "," << *(color+1) << ")" << std::endl;
 
 	*point = radius*cos(decl)*cos(ra);
 	*(point+1) = radius*cos(decl)*sin(ra);

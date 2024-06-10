@@ -1,16 +1,17 @@
 import os
 os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = pow(2,40).__str__()
 import cv2
-import math
+import numpy as np
 import struct
 from tqdm import tqdm
 
-def open_dem(filename):
+typs = ["short","int","float","double"]
+
+def open_dem(filename,typ):
 	"""
-		Reads in the TIF DEM file, converts to bin for easy parsing,
-		without having to keep the whole thing in memory. Defines 
-		width and height of the sphere in pixels.
+		Converts image file to bin.
 	"""
+	assert(typ in typs)
 	bin_name = filename.replace(".tif",".bin")
 	if not os.path.exists(bin_name):
 		print("Loading Img File. This may take a while...")
@@ -21,10 +22,18 @@ def open_dem(filename):
 		for j in tqdm(range(height)):
 			for i in range(width):
 				value = img[j][i]
-				if math.isnan(value):
+				if np.isnan(value):
 					value = 0
-				value = int(round(value,0))
-				f.write(struct.pack("h",value))
+				if typ=="short" or typ=="int":
+					value = int(round(value,0))
+				if typ == "short":
+					f.write(struct.pack("h",value))
+				elif typ == "int":
+					f.write(struct.pack("i",value))
+				elif typ == "float":
+					f.write(struct.pack("f",value))
+				elif typ == "double":
+					f.write(struct.pack("d",value))
 		f.close()
 		del img
 	return
@@ -32,4 +41,4 @@ def open_dem(filename):
 
 if __name__ == "__main__":
 	filename = "../maps/ldem_87s_5mpp.tif"
-	open_dem(filename)
+	open_dem(filename,"float")

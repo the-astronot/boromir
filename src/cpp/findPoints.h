@@ -3,13 +3,14 @@
 #include <string.h>
 #include "linalg.h"
 #include "common.h"
+#include "maps.h"
 
 using namespace linalg::aliases;
 
 extern "C"{
 int uv2_los(float u, float v, float2 fov, float2 camsize, float3 *los);
 
-int uv2vertid(ulong u, ulong v, ulong u_pixels, ulong* id);
+//int uv2vertid(ulong u, ulong v, ulong u_pixels, ulong* id);
 
 int vertIsNull(float* mesh);
 

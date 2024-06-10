@@ -302,11 +302,14 @@ FOV = array([deg2rad(20),deg2rad(16)])
 U_PIXELS = 92160
 V_PIXELS = 46080
 PIXELS = array([2592,2048])
-N_SUBPIXELS = 1
+N_SUBPIXELS = 2
 OFFSET_PIX = array([50,50])
 #FOV = array([deg2rad(20),deg2rad(20)])
 #PIXELS = array([3,3])
 #N_SUBPIXELS = 2
+#OFFSET_PIX = array([0,0])
+#FOV = array([deg2rad(3),deg2rad(3)])
+#PIXELS = array([10,10])
 #OFFSET_PIX = array([0,0])
 
 
@@ -317,9 +320,9 @@ if __name__ == "__main__":
 																[-1,0,0],
 																[0,-1,0]]))
 	#sc_quat = Quaternion(0,[0,0,1])
-	#sc_quat = Quaternion(0.707,[0,-0.707,0])
+	sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
-	sc_quat = Quaternion(1,[0,0,0])
+	#sc_quat = Quaternion(1,[0,0,0])
 	quat = Quaternion()
 	#print(sc_quat)
 	dcm = sc_quat.toDCM().T@quatWorldtoCam.toDCM()
@@ -327,7 +330,7 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([-3*RADIUS,0,0])
+	pos = array([0,0,-RADIUS-1500000])
 	state = State(pos,quat)
 	
 	dem_file = "../images/big_dem.tif"

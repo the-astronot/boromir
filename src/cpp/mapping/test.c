@@ -4,15 +4,16 @@
 int main(int argc, char** argv);
 
 int main(int argc, char** argv) {
-  float ra,decl,height;
-  int status;
-  ra = 0;
-  decl = -3.1410/2.0;
+  double ra,decl;
+  float height;
+  ra = -0.891307;
+  decl = -1.3632;
   height = 100;
   load_maps();
-  status = get_point(&ra,&decl,&height);
-  printf("Status is: %d\n",status);
+  printf("RA is %f, Decl is %f\n",ra,decl);
+  get_point(&ra,&decl,&height);
   close_maps();
+  printf("RA is %f, Decl is %f\n",ra,decl);
   printf("Height is: %f\n",height);
   return 0;
 }

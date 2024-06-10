@@ -19,7 +19,7 @@ def endRender(a,b):
 	isRendering = False
 
 
-def render(states,pos,sun_angles,moon_config,sun_config,
+def render(states,dcms,pos,sun_angles,moon_config,sun_config,
 					 camera_config,render_config,outdir):
 	global isRendering
 	if not os.path.exists(outdir):
@@ -33,11 +33,12 @@ def render(states,pos,sun_angles,moon_config,sun_config,
 	cam.rotation_mode = 'QUATERNION'
 	for i,state in enumerate(states):
 		moveObject(cam,state)
+		dcm = dcms[i]
 		for sa in sun_angles:
 			sunAngleXYZ = [90,0,90+pos[i][1]-(90-sa)]
 			print(sunAngleXYZ)
 			moveSunObject(sun,[0,0,0],sunAngleXYZ)
-			filename =  os.path.join(outdir,"{:.0f}X_{:.0f}Y_{:.0f}Z_sa{:.0f}".format(state.position[0],state.position[1],state.position[2],sa))
+			filename =  os.path.join(outdir,"{:.0f}X_{:.0f}Y_{:.0f}Z_sa{:.0f}_dcm{}".format(state.position[0],state.position[1],state.position[2],sa,str(dcm).replace("\n","")))
 			scene.render.filepath = filename
 			if os.path.exists(filename): # Don't re-render rendered image
 				print("File: {} already exists, skipping...".format(os.basename(filename)))
@@ -224,15 +225,15 @@ if __name__ == "__main__":
 	for lat in lats:
 		for lon in lons:
 			locations.append([lat,lon])
-	sun_angles = [x for x in range(180,211,5)]
+	sun_angles = [x for x in range(0,31,5)]
 	RADIUS = 1737400
 
 
 	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
 	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
-	#sc_quat = Quaternion(0.707,[0,-0.707,0])
-	sc_quat = Quaternion(1,[0,0,0])
+	sc_quat = Quaternion(0.707,[0,-0.707,0])
+	#sc_quat = Quaternion(1,[0,0,0])
 	quat = Quaternion()
 	#dcm = sc_quat.toDCM()@quatWorldtoCam.toDCM()
 	dcm = quatWorldtoCam.toDCM()@sc_quat.toDCM()
@@ -240,10 +241,10 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([-RADIUS*3,0,0])
+	pos = array([0,0,-RADIUS-1500000])
 	state = State(pos,quat)
 
-	render([state],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"../outimages")
+	render([state],[sc_quat.toDCM()],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"../outimages")
 	#old_render([3237.4],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"./outimages")
 	# Save Mainfile
 	#bpy.ops.wm.save_mainfile()

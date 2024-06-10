@@ -12,6 +12,7 @@
 # C Stuff
 *.o
 *.so
+*.out
 
 
 # Python

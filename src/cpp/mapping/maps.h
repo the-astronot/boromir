@@ -3,8 +3,8 @@
 
 #include "common.h"
 
-typedef int(*check)(float,float);
-typedef void(*convert)(float*,float*,float*,FILE*);
+typedef int(*check)(double,double);
+typedef void(*convert)(double*,double*,float*,int);
 
 ////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE BIT WHERE YOU ADD MORE MAPS
@@ -30,13 +30,13 @@ convert find_funcs[NUM_MAPS] = {Convert_LOLA_87S_5, // LOLA 87S
 
 // Map Names - These MUST be the Binary Versions!
 const char* filenames[NUM_MAPS] = {
-  "ldem_87s_5mpp.bin",                              // LOLA 87S
-  "Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.bin"     // LOLA 118
+  "../maps/ldem_87s_5mpp.bin",                              // LOLA 87S
+  "../maps/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.bin"     // LOLA 118
   };
 
-const ulong map_dims[NUM_MAPS][2] = {{40000,40000}, // LOLA 87S
-                                    {92180,46080}   // LOLA 118
-                                    };
+const double map_dims[NUM_MAPS][2] = {{40000.,40000.}, // LOLA 87S
+                                      {92160.,46080.}   // LOLA 118
+                                      };
 // END MAP ADDITION SECTION
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,21 +47,27 @@ const ulong map_dims[NUM_MAPS][2] = {{40000,40000}, // LOLA 87S
 FILE* files[NUM_MAPS];
 
 // Declarations
-int get_point(float* ra, float* decl, float* height);
+int get_point(double* ra, double* decl, float* height);
 int load_maps();
 int close_maps();
 
 // Definitions
-int get_point(float* ra, float* decl, float* height) {
+int get_point(double* ra, double* decl, float* radius) {
   for (int i=0; i<NUM_MAPS; i++) {
+    #ifdef DEBUG
+      printf("Checking Map %d!\n",i);
+    #endif
     if ((check_funcs[i])(*ra,*decl) == TRUE) {
-      (find_funcs[i])(ra,decl,height,files[i]);
+      #ifdef DEBUG
+        printf("Point is in Map!\n");
+      #endif
+      (find_funcs[i])(ra,decl,radius,i);
       return 0;
     }
   }
   *ra = 0;
   *decl = 0;
-  *height = 0;
+  *radius = 0;
   return 1;
 }
 
