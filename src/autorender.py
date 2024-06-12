@@ -8,6 +8,7 @@ import mathutils as mu
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Local imports
 from Structures import Quaternion,State
+from Camera import Camera,get_camera
 
 
 def startRender():
@@ -19,78 +20,37 @@ def endRender(a,b):
 	isRendering = False
 
 
-def render(states,dcms,pos,sun_angles,moon_config,sun_config,
-					 camera_config,render_config,outdir):
+def render(camera,pos,sun_angles,moon_config,sun_config,render_config,outdir):
 	global isRendering
 	if not os.path.exists(outdir):
 		os.makedirs(outdir)
-	scene = setup(moon_config,sun_config,camera_config,render_config)
+	scene = setup(moon_config,sun_config,camera,render_config)
 	if scene is None:
 		return
 	# Lets try for a quick set of images
 	sun = bpy.data.objects["Light"]
 	cam = scene.camera
 	cam.rotation_mode = 'QUATERNION'
-	for i,state in enumerate(states):
-		moveObject(cam,state)
-		dcm = dcms[i]
-		for sa in sun_angles:
-			sunAngleXYZ = [90,0,90+pos[i][1]-(90-sa)]
-			print(sunAngleXYZ)
-			moveSunObject(sun,[0,0,0],sunAngleXYZ)
-			filename =  os.path.join(outdir,"{:.0f}X_{:.0f}Y_{:.0f}Z_sa{:.0f}_dcm{}".format(state.position[0],state.position[1],state.position[2],sa,str(dcm).replace("\n","")))
-			scene.render.filepath = filename
-			if os.path.exists(filename): # Don't re-render rendered image
-				print("File: {} already exists, skipping...".format(os.basename(filename)))
-				continue
-			startRender()
-			bpy.ops.render.render("INVOKE_DEFAULT",write_still=True)
-			while isRendering is True:
-				time.sleep(0.1)
-			print("Finished Rendering Image!")
+	moveObject(cam,camera.state)
+	dcm = state.attitude.toDCM()
+	for sa in sun_angles:
+		sunAngleXYZ = [90,0,90+pos[0][1]-(90-sa)]
+		print(sunAngleXYZ)
+		moveSunObject(sun,[0,0,0],sunAngleXYZ)
+		filename =  os.path.join(outdir,"{:.0f}X_{:.0f}Y_{:.0f}Z_sa{:.0f}_dcm{}".format(camera.state.position[0],camera.state.position[1],camera.state.position[2],sa,str(dcm).replace("\n","")))
+		scene.render.filepath = filename
+		if os.path.exists(filename): # Don't re-render rendered image
+			print("File: {} already exists, skipping...".format(os.basename(filename)))
+			continue
+		startRender()
+		bpy.ops.render.render("INVOKE_DEFAULT",write_still=True)
+		while isRendering is True:
+			time.sleep(0.1)
+		print("Finished Rendering Image!")
 	return
-
-
-def old_render(ranges,positions,sun_angles,moon_config,sun_config,
-					 camera_config,render_config,outdir):
-	global isRendering
-	if not os.path.exists(outdir):
-		os.makedirs(outdir)
-	scene = setup(moon_config,sun_config,camera_config,render_config)
-	if scene is None:
-		return
-	# Lets try for a quick set of images
-	sun = bpy.data.objects["Light"]
-	cam = scene.camera
-	cam.rotation_mode = 'YZX'
-	for r in ranges:
-		r *= 1000 # Scaling to m
-		for pos in positions:
-			camPosXYZ = array([r*cos(deg2rad(pos[0]))*cos(deg2rad(pos[1])),
-						 						r*cos(deg2rad(pos[0]))*sin(deg2rad(pos[1])),
-												r*sin(deg2rad(pos[0]))])
-			camAnglesXYZ = [90-pos[0],0,90+pos[1]]
-			
-			print("Cam Angles: {}".format(camAnglesXYZ))
-			moveSunObject(cam,camPosXYZ,camAnglesXYZ)
-			print("Camera Position: {}\nCamera Orientation: {}".format(camPosXYZ,camAnglesXYZ))
-			for sa in sun_angles:
-				sunAngleXYZ = [90,0,90+pos[1]-(90-sa)]
-				moveSunObject(sun,[0,0,0],sunAngleXYZ)
-				scene.render.filepath = os.path.join(outdir,"{:.0f}km_lat{:.0f}_lon{:.0f}_sa{:.0f}".format(r*1000,pos[0],pos[1],sa))
-				if os.path.exists(os.path.join(outdir,"{:.0f}km_lat{:.0f}_lon{:.0f}_sa{:.0f}.png".format(r*1000,pos[0],pos[1],sa))): # Don't re-render rendered image
-					print("File: {} already exists, skipping...".format("{:.0f}km_lat{:.0f}_lon{:.0f}_sa{:.0f}.png".format(r*1000,pos[0],pos[1],sa)))
-					continue
-				startRender()
-				bpy.ops.render.render("INVOKE_DEFAULT",write_still=True)
-				while isRendering is True:
-					time.sleep(0.1)
-				print("Finished Rendering Image!")
-	return
-
 	
 
-def setup(moon_config,sun_config,camera_config,render_config):
+def setup(moon_config,sun_config,camera,render_config):
 	"""
 	Taking care of all of the boring setup stuff
 	"""
@@ -107,10 +67,13 @@ def setup(moon_config,sun_config,camera_config,render_config):
 	scene = bpy.data.scenes["Scene"]
 	scene.camera = cam
 	# Config Camera
-	cam.data.lens = camera_config[0]
+	cam.data.lens_unit = "FOV"
+	cam.data.angle_x = camera.FOV_x
+	cam.data.angle_y = camera.FOV_y
 	cam.data.clip_end = np.inf
-	scene.render.resolution_x = camera_config[1]
-	scene.render.resolution_y = camera_config[2]
+	cam.data.sensor_fit = "AUTO"
+	scene.render.resolution_x = camera.Ncols
+	scene.render.resolution_y = camera.Nrows
 	scene.render.resolution_percentage = 100
 
 	# Config Moon Material
@@ -205,6 +168,7 @@ isRendering = False
 
 
 if __name__ == "__main__":
+	RADIUS = 1737400
 	# Moon config = [roughness, metallic, IOR, ]
 	moon_config = [1.0,0.0,1.450]
 	# Sun config = [Irradiance (W/m^2), Color(RGB 0-1), Angle(Rad)]
@@ -226,13 +190,12 @@ if __name__ == "__main__":
 		for lon in lons:
 			locations.append([lat,lon])
 	sun_angles = [x for x in range(0,31,5)]
-	RADIUS = 1737400
-
-
+	
 	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
 	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
-	sc_quat = Quaternion(0.707,[0,-0.707,0])
+	#sc_quat = Quaternion(0.707,[0,-0.707,0])
+	sc_quat = Quaternion(0.1,[0,0,-0.995])
 	#sc_quat = Quaternion(1,[0,0,0])
 	quat = Quaternion()
 	#dcm = sc_quat.toDCM()@quatWorldtoCam.toDCM()
@@ -241,10 +204,13 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([0,0,-RADIUS-1500000])
+	pos = array([RADIUS+1500000,0,0])
 	state = State(pos,quat)
+	camera = get_camera("../configs/cameras/testcam.json")
+	camera.set_state(state)
 
-	render([state],[sc_quat.toDCM()],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"../outimages")
+
+	render(camera,locations,sun_angles,moon_config,sun_config,render_config,"../outimages")
 	#old_render([3237.4],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"./outimages")
 	# Save Mainfile
 	#bpy.ops.wm.save_mainfile()

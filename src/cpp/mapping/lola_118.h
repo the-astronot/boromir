@@ -9,13 +9,13 @@ extern FILE* files[];
 //
 
 // Is Point in Map?
-int PointIn_LOLA_118(double ra, double decl) {
+int PointIn_LOLA_118(ldouble ra, ldouble decl) {
   // The LOLA 118 meter per pixel map has full moon coverage
   return TRUE;
 }
 
 // Convert to Map
-void Convert_LOLA_118(double* ra, double* decl, float* radius, int idx) {
+void Convert_LOLA_118(ldouble* ra, ldouble* decl, double* radius, int idx) {
   ulong u,v,read_loc;
 	float fu,fv;
   short read_radius;
@@ -36,7 +36,7 @@ void Convert_LOLA_118(double* ra, double* decl, float* radius, int idx) {
 	fseek(files[idx],read_loc,SEEK_SET);
 	fread(&read_radius,sizeof(short),1,files[idx]);
 
-	*radius = MOON_RADIUS+0.5*(float)read_radius;
+	*radius = MOON_RADIUS+0.5*(double)read_radius;
 }
 
 #endif

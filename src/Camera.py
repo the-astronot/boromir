@@ -1,0 +1,47 @@
+from numpy import deg2rad,array
+import json
+
+class Camera():
+	types = {"FOV_x":deg2rad,
+					"FOV_y":deg2rad,
+					"F_Stop":float,
+					"NumBlades":int,
+					"Nrows":int,
+					"Ncols":int,
+					"SubSamples":int,
+					"OffsetPix":array,
+					}
+	
+	def __init__(self,json=None,state=None):
+		self.default_init()
+		if json is not None:
+			self.from_json(json)
+		if state is not None:
+			self.state = state
+
+	def default_init(self):
+		self.FOV_x = 0.1
+		self.FOV_y = 0.1
+		self.F_Stop = 2.8
+		self.NumBlades = 5
+		self.Nrows = 1024
+		self.Ncols = 1024
+		self.SubSamples = 1
+		self.OffsetPix = array([20,20])
+		self.state = None
+
+	def from_json(self,json):
+		for key in json:
+			if key in self.types:
+				setattr(self,key,self.types[key](json[key]))
+
+	def set_state(self,state):
+		self.state = state
+
+
+def get_camera(filename):
+	cam_data=None
+	with open(filename,"r") as f:
+		cam_data = json.load(f)
+	the_camera = Camera(json=cam_data)
+	return the_camera

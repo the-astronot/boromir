@@ -1,0 +1,7 @@
+{
+	"FOV_x": 20,
+	"FOV_y": 20,
+	"Nrows": 10000,
+	"Ncols": 10000,
+	"SubSamples": 1
+}

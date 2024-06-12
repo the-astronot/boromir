@@ -7,8 +7,9 @@
 #define FALSE 0
 #define ullong unsigned long long
 #define ulong unsigned long
-#define MOON_RADIUS 1737400 //meters
-#define MOON_POLAR_RADIUS 1736000 //meters
+#define ldouble long double
+#define MOON_RADIUS 1737400. //meters
+#define MOON_POLAR_RADIUS 1736000. //meters
 
 int uv2vertid(ulong u, ulong v, ulong u_pixels, ulong* id) {
 	*id = v*u_pixels+u;

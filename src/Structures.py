@@ -1,6 +1,7 @@
 """
 	Class Structures
 """
+import numpy as np
 from mathutil import *
 
 class Quaternion():
@@ -12,10 +13,13 @@ class Quaternion():
 	
 	def __init__(self,s=None,v=None):
 		if s is not None:
-			self.s = float(s)
+			self.s = np.float32(s)
 		if v is not None:
-			self.v = array(v)
+			self.v = array(v,dtype=np.float32)
 		self.normalize()
+
+	def __str__(self):
+		return "[{:.5f}, {:.5f}, {:.5f}, {:.5f}]".format(self.s,self.v[0],self.v[1],self.v[2])
 
 	def toDCM(self):
 		dcm = zeros((3,3))

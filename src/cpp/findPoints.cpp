@@ -11,7 +11,6 @@ int findPoints(float position[3],
 							float N_SubPixels,
 							int i_mapsize[2],
 							float fov[2],
-							const char* filename,
 							const char* dirname) 
 							{
 	
@@ -29,11 +28,6 @@ int findPoints(float position[3],
 	float RADIUS = 1737400;
 
 	load_maps();
-
-	std::FILE* file = std::fopen(filename,"rb");
-	if (file != NULL) {
-		std::cout << "File opened" << std::endl;
-	}
 
 	for (ulong u=0; u<meshsize[0]; u++) {
 		for (ulong v=0; v<meshsize[1]; v++) {
@@ -55,12 +49,10 @@ int findPoints(float position[3],
 				continue;
 			}
 			//findPoint(file,intercept,mapsize,colors+((v+u*meshsize[1])*2),mesh+((v+u*meshsize[1])*3));
-			findPoint(file,intercept,mapsize,colors+idx*2,mesh+(idx*3));
+			findPoint(intercept,mapsize,colors+idx*2,mesh+(idx*3));
 			//std::cout << "Actual Intercept: (" << *(mesh+((v*meshsize[0]+u)*3)) << ", " << *(mesh+((v*meshsize[0]+u)*3)+1) << ", " << *(mesh+((v*meshsize[0]+u)*3)+2) << ")" << std::endl;
 		}
 	}
-
-	std::fclose(file);
 
 	close_maps();
 
@@ -200,60 +192,29 @@ int get_intersection(float3 pos, float3 los, float radius, float3* intercept) {
 	return 0;
 }
 
-int findPoint(std::FILE* fp, float3 intercept, float2 mapsize, float* color, float* point) {
+int findPoint(float3 intercept, float2 mapsize, float* color, float* point) {
 	// Get Moon UV
-	float r,radius;
-	double ra,decl;
-	//ulong u,v;
-	//ulong read_loc,idx;
-	//short read_radius;
+	float r;
+	ldouble ra,decl;
+	double radius;
 
-	r = sqrt(sum(pow(intercept,2)));
-	decl = asin(fmax(-1,fmin(intercept[2]/r,1)));
-	if (fabs(cos(decl)) < 1e-10) {
+	r = sqrtl(sum(pow(intercept,2)));
+	decl = asinl(fmaxl(-1L,fminl(intercept[2]/r,1L)));
+	if (fabsl(cosl(decl)) < 1e-20) {
 		ra = 0;
 	} else {
-		// ra = arctan2(ijk[1]/(r*cos(decl)),ijk[0]/(r*cos(decl)))
 		ra = atan2(intercept[1]/(r*cos(decl)),intercept[0]/(r*cos(decl)));
 	}
-	/*
-	// u = ((U_PIXELS-1)/2)+(U_PIXELS/360.*rad2deg(ra))
-	// v = ((V_PIXELS-1)/2)-(V_PIXELS/180.*rad2deg(decl))
-	u = (ulong) round(((mapsize[0]-1)/2.0)+((mapsize[0]/(2*M_PI))*ra));
-	v = (ulong) round((mapsize[1]-1)/2.0)-((mapsize[1]/M_PI)*decl);
-	// ra = 2*pi*((u+.5)/U_PIXELS) - pi
-	// decl = -pi*((v+.5)/V_PIXELS) + pi/2
-	ra = 2.0*M_PI*(((float)u+0.5)/mapsize[0]) - M_PI;
-	decl = -M_PI*(((float)v+0.5)/mapsize[1]) + M_PI/2.0;
-	*color = (((mapsize[0]-1)/2.0)+((mapsize[0]/(2*M_PI))*ra))/mapsize[0];
-	*(color+1) = 1.0-((((mapsize[1]-1)/2.0)-((mapsize[1]/M_PI)*decl))/mapsize[1]);
-	//u = round(*color*mapsize[0]);
-	//v = round(mapsize[1]*(1-*(color+1)));
-	uv2vertid(u,v,(ulong)mapsize[0],&idx);
-	read_loc = sizeof(short)*idx;
-	std::fseek(fp,read_loc,SEEK_SET);
-	std::fread(&read_radius,sizeof(short),1,fp);
-
-	radius = 1737400+0.5*(float)read_radius;
-	*/
 
 	// Trying out the new system
-	//std::cout << "RA is " << ra << ", Decl is " << decl << std::endl;
 	get_point(&ra,&decl,&radius);
-	//std::cout << "Radius is " << radius << std::endl;
-	*color = ra/(4*M_PI)+0.5;
-	*(color+1) = 0.5-(decl/(M_PI));
-	//std::cout << "Color location is (" << *color << "," << *(color+1) << ")" << std::endl;
 
-	*point = radius*cos(decl)*cos(ra);
-	*(point+1) = radius*cos(decl)*sin(ra);
-	*(point+2) = radius*sin(decl);
-	// colors[u,v,:] = array([cu/U_PIXELS,1-(cv/V_PIXELS)])
-	//std::cout << "Point: U=" << u << ", V=" << v << std::endl;
+	*color = (float)(ra/(4*M_PIl)+0.5);
+	*(color+1) = (float)(0.5-(decl/(M_PIl)));
 
-	//std::cout << "Point: RA=" << ra*180/M_PI << ", DECL=" << decl*180/M_PI << std::endl;
-	
-	//std::cout << "Point: (" << *point << ", " << *(point+1) << ", " << *(point+2) << ")" << std::endl;
+	*point = radius*cosl(decl)*cosl(ra);
+	*(point+1) = radius*cosl(decl)*sinl(ra);
+	*(point+2) = radius*sinl(decl);
 	return 0;
 }
 

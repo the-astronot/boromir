@@ -4,10 +4,9 @@
 int main(int argc, char** argv);
 
 int main(int argc, char** argv) {
-  double ra,decl;
-  float height;
+  double ra,decl,height;
   ra = -0.891307;
-  decl = -1.3632;
+  decl = -M_PI/2.0 + 0.01;
   height = 100;
   load_maps();
   printf("RA is %f, Decl is %f\n",ra,decl);
