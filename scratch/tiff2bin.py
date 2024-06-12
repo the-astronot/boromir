@@ -40,5 +40,9 @@ def open_dem(filename,typ):
 
 
 if __name__ == "__main__":
-	filename = "../maps/ldem_87s_5mpp.tif"
-	open_dem(filename,"float")
+	filenames = ["../maps/ldem_87s_5mpp.tif",
+							"../maps/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif"]
+	types = ["float",
+					"short"]
+	for i in range(len(filenames)):
+		open_dem(filenames[i],types[i])

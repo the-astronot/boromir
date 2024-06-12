@@ -4,12 +4,11 @@ extern "C" {
 int findPoints(float position[3], 
 							float dcm[9], 
 							int camsize[2], 
-							float offsetsize[2], 
+							double offsetsize[2], 
 							float* mesh,
 							float* colors,
 							ulong meshsize[2],
-							float N_SubPixels,
-							int i_mapsize[2],
+							double N_SubPixels,
 							float fov[2],
 							const char* dirname) 
 							{
@@ -22,8 +21,7 @@ int findPoints(float position[3],
 	int status;
 	float3 intercept;
 	float3 new_los;
-	float2 mapsize = {(float)i_mapsize[0],(float)i_mapsize[1]};
-	float c_u,c_v;
+	double c_u,c_v;
 	ulong idx;
 	float RADIUS = 1737400;
 
@@ -31,8 +29,8 @@ int findPoints(float position[3],
 
 	for (ulong u=0; u<meshsize[0]; u++) {
 		for (ulong v=0; v<meshsize[1]; v++) {
-			c_u = ((float)u-offsetsize[0])/N_SubPixels;
-			c_v = ((float)v-offsetsize[1])/N_SubPixels;
+			c_u = ((double)u-offsetsize[0])/N_SubPixels;
+			c_v = ((double)v-offsetsize[1])/N_SubPixels;
 			uv2_los(c_u,c_v,lin_fov,lin_camsize,&los);
 			//std::cout << "LOS: (" << los[0] << ", " << los[1] << ", " << los[2] << ")" <<std::endl;
 			new_los = mul(transpose(mat_dcm),los);
@@ -49,7 +47,7 @@ int findPoints(float position[3],
 				continue;
 			}
 			//findPoint(file,intercept,mapsize,colors+((v+u*meshsize[1])*2),mesh+((v+u*meshsize[1])*3));
-			findPoint(intercept,mapsize,colors+idx*2,mesh+(idx*3));
+			findPoint(intercept,colors+idx*2,mesh+(idx*3));
 			//std::cout << "Actual Intercept: (" << *(mesh+((v*meshsize[0]+u)*3)) << ", " << *(mesh+((v*meshsize[0]+u)*3)+1) << ", " << *(mesh+((v*meshsize[0]+u)*3)+2) << ")" << std::endl;
 		}
 	}
@@ -67,7 +65,7 @@ int uv2_los(float u, float v, float2 fov, float2 camsize, float3* los) {
 	float angles_per_pixel_u = fov[0]/camsize[0];
 	float angles_per_pixel_v = fov[1]/camsize[1];
 
-	(*los)[0] = -(u-(camsize[0]/2.0)+.5)*angles_per_pixel_u;
+	(*los)[0] = (u-(camsize[0]/2.0)+.5)*angles_per_pixel_u;
 	(*los)[1] = -(v-(camsize[1]/2.0)+.5)*angles_per_pixel_v;
 	(*los)[2] = 1.0;
 
@@ -77,13 +75,6 @@ int uv2_los(float u, float v, float2 fov, float2 camsize, float3* los) {
 
 	return 0;
 }
-
-/*
-int uv2vertid(ulong u, ulong v, ulong u_pixels, ulong* id) {
-	*id = v*u_pixels+u;
-	return 0; 
-}
-*/
 
 int vertIsNull(float* mesh) {
 	float thresh = 1;
@@ -192,15 +183,15 @@ int get_intersection(float3 pos, float3 los, float radius, float3* intercept) {
 	return 0;
 }
 
-int findPoint(float3 intercept, float2 mapsize, float* color, float* point) {
+int findPoint(float3 intercept, float* color, float* point) {
 	// Get Moon UV
 	float r;
-	ldouble ra,decl;
+	double ra,decl;
 	double radius;
 
-	r = sqrtl(sum(pow(intercept,2)));
-	decl = asinl(fmaxl(-1L,fminl(intercept[2]/r,1L)));
-	if (fabsl(cosl(decl)) < 1e-20) {
+	r = sqrt(sum(pow(intercept,2)));
+	decl = asin(fmax(-1.0,fmin(intercept[2]/r,1.0)));
+	if (fabs(cos(decl)) < 1e-20) {
 		ra = 0;
 	} else {
 		ra = atan2(intercept[1]/(r*cos(decl)),intercept[0]/(r*cos(decl)));
@@ -209,12 +200,16 @@ int findPoint(float3 intercept, float2 mapsize, float* color, float* point) {
 	// Trying out the new system
 	get_point(&ra,&decl,&radius);
 
-	*color = (float)(ra/(4*M_PIl)+0.5);
-	*(color+1) = (float)(0.5-(decl/(M_PIl)));
+	#ifdef DEBUG
+		std::cout << "RA: " << ra << ", Decl: " << decl << ", Radius: " << radius << std::endl;
+	#endif
 
-	*point = radius*cosl(decl)*cosl(ra);
-	*(point+1) = radius*cosl(decl)*sinl(ra);
-	*(point+2) = radius*sinl(decl);
+	*color = (float)(ra/(2*M_PI)+0.5);
+	*(color+1) = (float)(0.5+(decl/(M_PI)));
+
+	*point = (float) radius*cos(decl)*cos(ra);
+	*(point+1) = (float) radius*cos(decl)*sin(ra);
+	*(point+2) = (float) radius*sin(decl);
 	return 0;
 }
 

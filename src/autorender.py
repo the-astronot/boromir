@@ -72,6 +72,7 @@ def setup(moon_config,sun_config,camera,render_config):
 	cam.data.angle_y = camera.FOV_y
 	cam.data.clip_end = np.inf
 	cam.data.sensor_fit = "AUTO"
+	cam.data.dof.use_dof=False
 	scene.render.resolution_x = camera.Ncols
 	scene.render.resolution_y = camera.Nrows
 	scene.render.resolution_percentage = 100
@@ -135,7 +136,7 @@ def setup(moon_config,sun_config,camera,render_config):
 	scene.render.threads = render_config[0]
 	scene.cycles.device = render_config[1]
 	scene.cycles.samples = render_config[2]
-	scene.cycles.use_denoising = False
+	scene.cycles.use_denoising = True
 
 	return scene
 
@@ -179,7 +180,7 @@ if __name__ == "__main__":
 	#cam_config = [102.1,3840,2160]
 	cam_config = [102.1,2592,2048]
 	# Render config = [num_threads,CPUvsGPU]
-	render_config	= [8,"CPU",256]
+	render_config	= [8,"GPU",1024]
 	#render([3237.4],[[0,0]],[0,30,60,90],moon_config,sun_config,cam_config,render_config,"./outimages")
 	#lons = [0,30,60,90,120,150,180,210,240,270,300,330]
 	lons = [0]
@@ -192,10 +193,10 @@ if __name__ == "__main__":
 	sun_angles = [x for x in range(0,31,5)]
 	
 	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
-	#sc_quat = Quaternion(0,[0,0,1])
+	sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
-	sc_quat = Quaternion(0.1,[0,0,-0.995])
+	#sc_quat = Quaternion(0.1,[0,0,-0.995])
 	#sc_quat = Quaternion(1,[0,0,0])
 	quat = Quaternion()
 	#dcm = sc_quat.toDCM()@quatWorldtoCam.toDCM()

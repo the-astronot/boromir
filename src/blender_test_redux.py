@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
 
 	data_path = "./"
-	image_path = os.path.join(data_path,"../images")
+	image_path = os.path.join(data_path,"../maps")
 	image_name = "lroc_color_poles.tif"
 	verts_file = "verts.bin"
 	faces_file = "faces.bin"

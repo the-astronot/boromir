@@ -123,8 +123,8 @@ def grassy_knoll(camera):
 
 # Globals
 RADIUS = 1737400 # m
-U_PIXELS = 92160
-V_PIXELS = 46080
+#U_PIXELS = 92160
+#V_PIXELS = 46080
 
 if __name__ == "__main__":
 	## Testing
@@ -133,10 +133,13 @@ if __name__ == "__main__":
 	quatWorldtoCam.fromDCM(array([[0,0,1],
 																[-1,0,0],
 																[0,-1,0]]))
-	#sc_quat = Quaternion(0,[0,0,1])
+	#quatWorldtoCam.fromDCM(array([[0,0,1],
+	#														 	[1,0,0],
+	#														 	[0,1,0]]).T)
+	sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
-	sc_quat = Quaternion(0.1,[0,0,-0.995])
+	#sc_quat = Quaternion(0.1,[0,0,-0.995])
 	#sc_quat = Quaternion(1,[0,0,0])
 	quat = Quaternion()
 	#print(sc_quat)
@@ -179,12 +182,11 @@ if __name__ == "__main__":
 	create_mesh.argtypes = [(ct.c_float*3),
 												 	(ct.c_float*9),
 													(ct.c_int*2),
-													(ct.c_float*2),
+													(ct.c_double*2),
 													ct.POINTER(ct.c_float),
 													ct.POINTER(ct.c_float),
 													(ct.c_ulong*2),
-													ct.c_float,
-													(ct.c_int*2),
+													ct.c_double,
 													(ct.c_float*2),
 													ct.c_char_p]
 	# Setup data
@@ -192,20 +194,25 @@ if __name__ == "__main__":
 	pos_c = (ct.c_float*3)(*(camera.state.position))
 	dcm_c = (ct.c_float*9)(*(camera.state.attitude.toDCM().flatten()))
 	camsize_c = (ct.c_int*2)(*[camera.Ncols,camera.Nrows])
-	offset_c = (ct.c_float*2)(*camera.OffsetPix)
-	meshsize = mesh.shape
-	colorsize = colors.shape
-	meshsize_flt = meshsize[0]*meshsize[1]*meshsize[2]
-	colorsize_flt = colorsize[0]*colorsize[1]*colorsize[2]
+	offset_c = (ct.c_double*2)(*camera.OffsetPix)
+	meshsize = np.array(mesh.shape)
+	colorsize = np.array(colors.shape)
+	meshsize_flt = np.prod(meshsize)
+	#meshsize_flt = meshsize[0]*meshsize[1]*meshsize[2]
+	colorsize_flt = np.prod(colorsize)
+	#colorsize_flt = colorsize[0]*colorsize[1]*colorsize[2]
 	mesh_c = (ct.c_float*meshsize_flt)()
 	colors_c = (ct.c_float*colorsize_flt)()
 	meshsize_c = (ct.c_ulong*2)(*meshsize[:2])
-	SubSamples_c = ct.c_float(camera.SubSamples)
-	mapsize_c = (ct.c_int*2)(U_PIXELS,V_PIXELS)
+	SubSamples_c = ct.c_double(camera.SubSamples)
 	fov_c = (ct.c_float*2)(camera.FOV_x,camera.FOV_y)
 	dirname_c = ct.create_string_buffer("./".encode())
-	status = create_mesh(pos_c,dcm_c,camsize_c,offset_c,mesh_c,colors_c,meshsize_c,SubSamples_c,mapsize_c,fov_c,dirname_c)
+	status = create_mesh(pos_c,dcm_c,camsize_c,offset_c,mesh_c,colors_c,meshsize_c,SubSamples_c,fov_c,dirname_c)
 	print("Status: {}".format(status))
+	meshsize = np.array([meshsize[1],meshsize[0],meshsize[2]])
+	colorsize = np.array([colorsize[1],colorsize[0],colorsize[2]])
 	mesh = np.frombuffer(mesh_c,dtype=np.float32).reshape(meshsize)
+	colors = np.frombuffer(colors_c,dtype=np.float32).reshape(colorsize)
 	print(mesh)
+	print(colors)
 	#print(norm(mesh,axis=2))

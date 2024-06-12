@@ -3,8 +3,8 @@
 
 #include "common.h"
 
-typedef int(*check)(ldouble,ldouble);
-typedef void(*convert)(ldouble*,ldouble*,double*,int);
+typedef int(*check)(double,double);
+typedef void(*convert)(double*,double*,double*,int);
 
 ////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE BIT WHERE YOU ADD MORE MAPS
@@ -47,12 +47,12 @@ const double map_dims[NUM_MAPS][2] = {{40000.,40000.}, // LOLA 87S
 FILE* files[NUM_MAPS];
 
 // Declarations
-int get_point(ldouble* ra, ldouble* decl, double* radius);
+int get_point(double* ra, double* decl, double* radius);
 int load_maps();
 int close_maps();
 
 // Definitions
-int get_point(ldouble* ra, ldouble* decl, double* radius) {
+int get_point(double* ra, double* decl, double* radius) {
   for (int i=0; i<NUM_MAPS; i++) {
     #ifdef DEBUG
       printf("Checking Map %d!\n",i);

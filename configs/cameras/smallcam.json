@@ -3,8 +3,8 @@
 	"FOV_y": 16,
 	"F_Stop": 2.8,
 	"NumBlades": 5,
-	"Nrows": 40,
-	"Ncols": 50,
-	"SubSamples": 1,
+	"Nrows": 4,
+	"Ncols": 5,
+	"SubSamples": 2,
 	"OffsetPix": [0,0]
 }

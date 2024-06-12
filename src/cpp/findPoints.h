@@ -16,17 +16,16 @@ int write_to_files(float* mesh, float* colors, ulong meshsize[2], const char* di
 
 int get_intersection(float3 pos, float3 los, float radius, float3* intercept);
 
-int findPoint(float3 intercept, float2 mapsize, float* color, float* point);
+int findPoint(float3 intercept, float* color, float* point);
 
 int findPoints(float position[3], 
 							float dcm[9], 
 							int camsize[2], 
-							float offsetsize[2], 
+							double offsetsize[2], 
 							float* mesh,
 							float* colors,
 							ulong meshsize[2],
-							float N_SubPixels,
-							int i_mapsize[2],
+							double N_SubPixels,
 							float fov[2],
 							const char* dirname);
 }
