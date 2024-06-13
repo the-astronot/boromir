@@ -122,7 +122,7 @@ def setup(moon_config,sun_config,camera,render_config):
 
 	# Configure Background
 	bg = scene.world.node_tree.nodes["Background"]
-	image = bpy.data.images.load("../images/hipp8.tif")
+	image = bpy.data.images.load("../maps/hipp8.tif")
 	sky_texture_node = scene.world.node_tree.nodes.new(type="ShaderNodeTexImage")
 	sky_texture_node.image = image
 	sky_texture_node.projection = "SPHERE"
