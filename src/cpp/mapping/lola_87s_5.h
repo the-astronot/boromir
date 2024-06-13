@@ -27,7 +27,7 @@ void Convert_LOLA_87S_5(double* ra, double* decl, double* radius, int idx) {
   */
  	const double MPP = 5.0;
   const double CENTER = 19999.5;
- 	double phi,lambda,phi1,lambda0,k,rho,c,du,dv,x,y;
+ 	double phi,lambda,phi1,lambda0,k,du,dv,x,y;
   float weights[4];
   float heights[4];
 	ulong u,v,read_loc,u_max,ui,vi;

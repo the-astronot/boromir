@@ -68,14 +68,16 @@ def setup(moon_config,sun_config,camera,render_config):
 	scene.camera = cam
 	# Config Camera
 	cam.data.lens_unit = "FOV"
-	cam.data.angle_x = camera.FOV_x
-	cam.data.angle_y = camera.FOV_y
+	cam.data.angle = np.max([camera.FOV_x,camera.FOV_y])
 	cam.data.clip_end = np.inf
 	cam.data.sensor_fit = "AUTO"
-	cam.data.dof.use_dof=False
+	#cam.data.dof.use_dof = True
+	cam.data.dof.focus_distance = np.inf
+	cam.data.dof.aperture_blades = camera.NumBlades
+	cam.data.dof.aperture_fstop = camera.F_Stop
+	cam.data.clip_end = np.inf
 	scene.render.resolution_x = camera.Ncols
 	scene.render.resolution_y = camera.Nrows
-	scene.render.resolution_percentage = 100
 
 	# Config Moon Material
 	if not "MoonRocks" in bpy.data.materials:
@@ -95,7 +97,7 @@ def setup(moon_config,sun_config,camera,render_config):
 		print("No Contrast Node Found")
 	else:
 		contrast_node.inputs.get("Bright").default_value = 1.0
-		contrast_node.inputs.get("Contrast").default_value = 2.0
+		contrast_node.inputs.get("Contrast").default_value = 1.0
 
 	# Config Sun
 	if "Light" in bpy.data.objects:
@@ -198,6 +200,8 @@ if __name__ == "__main__":
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(0.1,[0,0,-0.995])
 	#sc_quat = Quaternion(1,[0,0,0])
+	#sc_quat = Quaternion(0.216668887,[0.702665992,-0.161286356,-0.658256643])
+	#pos = array([2450487.68,-1768944.776,951442.2338])
 	quat = Quaternion()
 	#dcm = sc_quat.toDCM()@quatWorldtoCam.toDCM()
 	dcm = quatWorldtoCam.toDCM()@sc_quat.toDCM()
@@ -209,6 +213,7 @@ if __name__ == "__main__":
 	state = State(pos,quat)
 	camera = get_camera("../configs/cameras/testcam.json")
 	camera.set_state(state)
+	print(np.rad2deg(camera.FOV_x),np.rad2deg(camera.FOV_y))
 
 
 	render(camera,locations,sun_angles,moon_config,sun_config,render_config,"../outimages")
