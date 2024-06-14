@@ -175,7 +175,7 @@ if __name__ == "__main__":
 	# Moon config = [roughness, metallic, IOR, ]
 	moon_config = [1.0,0.0,1.450]
 	# Sun config = [Irradiance (W/m^2), Color(RGB 0-1), Angle(Rad)]
-	sun_config = [20,[1,1,1],0.009304]
+	sun_config = [1,[1,1,1],0.009304]
 	#sun_config = [100,[1,1,1],0.009304]
 	# Cam config = [focal_length,HNumPix,VNumPix,]
 	#cam_config = [102.1,1024,1024]
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 	for lat in lats:
 		for lon in lons:
 			locations.append([lat,lon])
-	sun_angles = [x for x in range(0,31,5)]
+	sun_angles = [x for x in range(0,91,5)]
 	
 	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
 	sc_quat = Quaternion(0,[0,0,1])
