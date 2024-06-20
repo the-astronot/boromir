@@ -123,8 +123,6 @@ def grassy_knoll(camera):
 
 # Globals
 RADIUS = 1737400 # m
-#U_PIXELS = 92160
-#V_PIXELS = 46080
 
 if __name__ == "__main__":
 	## Testing
@@ -136,11 +134,11 @@ if __name__ == "__main__":
 	#quatWorldtoCam.fromDCM(array([[0,0,1],
 	#														 	[1,0,0],
 	#														 	[0,1,0]]).T)
-	sc_quat = Quaternion(0,[0,0,1])
+	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
 	#sc_quat = Quaternion(0.1,[0,0,-0.995])
-	#sc_quat = Quaternion(1,[0,0,0])
+	sc_quat = Quaternion(1,[0,0,0])
 	#sc_quat = Quaternion(0.216668887,[0.702665992,-0.161286356,-0.658256643])
 	#pos = array([2450487.68,-1768944.776,951442.2338])
 	quat = Quaternion()
@@ -150,7 +148,7 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([RADIUS+1500000,0,0])
+	pos = array([-RADIUS*3,0,0])
 	state = State(pos,quat)
 	camera.set_state(state)
 

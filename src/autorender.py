@@ -1,10 +1,12 @@
 import os
+from os.path import join,abspath,dirname
 import sys
 import bpy
 import numpy as np
 from numpy import pi,cos,sin,arccos,arcsin,arctan,deg2rad,rad2deg,array
 import time
 import mathutils as mu
+import json
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Local imports
 from Structures import Quaternion,State
@@ -135,6 +137,7 @@ def setup(moon_config,sun_config,camera,render_config):
 	bpy.app.handlers.render_post.append(endRender)
 	scene.render.engine = "CYCLES"
 	scene.render.threads_mode = "AUTO"
+	scene.render.use_persistent_data = True
 	scene.render.threads = render_config[0]
 	scene.cycles.device = render_config[1]
 	scene.cycles.samples = render_config[2]
@@ -166,12 +169,30 @@ def moveSunObject(obj, pos, angles):
 	return
 
 
+def load_config(filename,old_config=None):
+	new_config = {}
+	with open(filename,"r") as f:
+		new_config = json.load(f)
+	if old_config is not None:
+		for key in new_config:
+			old_config[key] = new_config[key]
+		return old_config
+	return new_config
+
+
 # Globals
 isRendering = False
 
 
 if __name__ == "__main__":
 	RADIUS = 1737400
+	BASE_PATH = dirname(abspath(__file__))
+	CONFIG_PATH = join(BASE_PATH,"configs")
+	default_config = "blender.conf"
+	config = load_config(join(CONFIG_PATH,default_config))
+	for i,arg in enumerate(sys.args[1:]):
+		print("Loading config {}: {}...".format(i,arg))
+		config = load_config(join(CONFIG_PATH,arg),old_config=config)
 	# Moon config = [roughness, metallic, IOR, ]
 	moon_config = [1.0,0.0,1.450]
 	# Sun config = [Irradiance (W/m^2), Color(RGB 0-1), Angle(Rad)]
@@ -181,7 +202,7 @@ if __name__ == "__main__":
 	#cam_config = [102.1,1024,1024]
 	#cam_config = [102.1,3840,2160]
 	cam_config = [102.1,2592,2048]
-	# Render config = [num_threads,CPUvsGPU]
+	# Render config = [num_threads,CPUvsGPU,shadows/pixel]
 	render_config	= [8,"GPU",1024]
 	#render([3237.4],[[0,0]],[0,30,60,90],moon_config,sun_config,cam_config,render_config,"./outimages")
 	#lons = [0,30,60,90,120,150,180,210,240,270,300,330]
@@ -192,14 +213,14 @@ if __name__ == "__main__":
 	for lat in lats:
 		for lon in lons:
 			locations.append([lat,lon])
-	sun_angles = [x for x in range(0,91,5)]
+	sun_angles = [x+180 for x in range(-90,91,5)]
 	
 	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
-	sc_quat = Quaternion(0,[0,0,1])
+	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(0.1,[0,0,-0.995])
-	#sc_quat = Quaternion(1,[0,0,0])
+	sc_quat = Quaternion(1,[0,0,0])
 	#sc_quat = Quaternion(0.216668887,[0.702665992,-0.161286356,-0.658256643])
 	#pos = array([2450487.68,-1768944.776,951442.2338])
 	quat = Quaternion()
@@ -209,7 +230,7 @@ if __name__ == "__main__":
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([RADIUS+1500000,0,0])
+	pos = array([-RADIUS*3,0,0])
 	state = State(pos,quat)
 	camera = get_camera("../configs/cameras/testcam.json")
 	camera.set_state(state)

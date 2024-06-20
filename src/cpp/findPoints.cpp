@@ -29,27 +29,24 @@ int findPoints(double position[3],
 
 	for (ulong u=0; u<meshsize[0]; u++) {
 		for (ulong v=0; v<meshsize[1]; v++) {
+			// mesh index to u,v
 			c_u = ((double)u-offsetsize[0])/N_SubPixels;
 			c_v = ((double)v-offsetsize[1])/N_SubPixels;
-			//std::cout << c_u << ", " << c_v << std::endl;
+			// u,v to line-of-sight
 			uv2_los(c_u,c_v,N_SubPixels,lin_fov,lin_camsize,&los);
-			//std::cout << "LOS: (" << los[0] << ", " << los[1] << ", " << los[2] << ")" <<std::endl;
+			// Rotate by Camera DCM
 			new_los = mul(transpose(mat_dcm),los);
-			//std::cout << "NEW_LOS: (" << new_los[0] << ", " << new_los[1] << ", " << new_los[2] << ")" <<std::endl;
+			// Find intersection of los with Spherical Moon
 			status = get_intersection(lin_position,new_los,RADIUS,&intercept);
 			uv2vertid(u,v,meshsize[0],&idx);
 			if (status == 0) {
-				//std::cout << "INTERCEPTION: (" << intercept[0] << ", " << intercept[1] << ", " << intercept[2] << ")" << std::endl;
 			} else {
-				//std::cout << "NO INTERCEPT" << std::endl;
 				for (ulong i=0; i<3; i++) {
 					*(mesh+(3*idx)+i) = 0;
 				}
 				continue;
 			}
-			//findPoint(file,intercept,mapsize,colors+((v+u*meshsize[1])*2),mesh+((v+u*meshsize[1])*3));
 			findPoint(intercept,colors+idx*2,mesh+(idx*3));
-			//std::cout << "Actual Intercept: (" << *(mesh+((v*meshsize[0]+u)*3)) << ", " << *(mesh+((v*meshsize[0]+u)*3)+1) << ", " << *(mesh+((v*meshsize[0]+u)*3)+2) << ")" << std::endl;
 		}
 	}
 
@@ -104,19 +101,15 @@ int write_to_files(float* mesh, float* colors, ulong meshsize[2], const char* di
 		for (ulong v=0; v<meshsize[1]; v++) {
 			uv2vertid(v,u,meshsize[1],&idx);
 			// Add Vertex
-			//std::cout << "Point: " << idx << " ==> ";
 			for (ulong i=0; i<3; i++) {
 				std::fwrite(mesh+(idx*3)+i,sizeof(float),1,vertptr);
-				//std::cout << *(mesh+(idx*3)+i) << ",";
 			}
-			//std::cout << std::endl;
 			// Add Colors
 			for (ulong i=0; i<2; i++) {
 				std::fwrite(colors+(idx*2)+i,sizeof(float),1,colorptr);
 			}
 			// Add Vertices
 			if ((u > 0) && (v > 0)) {
-				//if sum(np.abs(mesh[u-1,v]*mesh[u-1,v-1]*mesh[u,v])) > 0:
 				uv2vertid(u-1,v,meshsize[0],idxs);
 				uv2vertid(u-1,v-1,meshsize[0],idxs+1);
 				uv2vertid(u,v,meshsize[0],idxs+2);
@@ -124,19 +117,15 @@ int write_to_files(float* mesh, float* colors, ulong meshsize[2], const char* di
 					for (ulong i=0; i<3; i++) {
 						std::fwrite((idxs+i),sizeof(ulong),1,faceptr);
 					}
-					//std::cout << "Added Face: (" << *(idxs) << "," << *(idxs+1) << "," << *(idxs+2) << ")" << std::endl;
 					count++;
 				}
-				//if sum(np.abs(mesh[u-1,v-1]*mesh[u,v-1]*mesh[u,v])) > 0:
 				uv2vertid(u-1,v-1,meshsize[0],idxs);
 				uv2vertid(u,v-1,meshsize[0],idxs+1);
 				uv2vertid(u,v,meshsize[0],idxs+2);
 				if (!(vertIsNull(mesh+(3*idxs[0]))||vertIsNull(mesh+(3*idxs[1]))||vertIsNull(mesh+(3*idxs[2])))) {
 					for (ulong i=0; i<3; i++) {
-						//*(idxs+i) = *(idxs+i)+1;
 						std::fwrite((idxs+i),sizeof(ulong),1,faceptr);
 					}
-					//std::cout << "Added Face: (" << *(idxs) << "," << *(idxs+1) << "," << *(idxs+2) << ")" << std::endl;
 					count++;
 				}
 			}

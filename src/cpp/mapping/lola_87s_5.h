@@ -68,7 +68,6 @@ void Convert_LOLA_87S_5(double* ra, double* decl, double* radius, int idx) {
   #endif
   *radius = MOON_RADIUS+height;
 }
-
 #else
 // Convert to Map
 void Convert_LOLA_87S_5(double* ra, double* decl, double* radius, int idx) {
@@ -110,7 +109,6 @@ void Convert_LOLA_87S_5(double* ra, double* decl, double* radius, int idx) {
   *decl = fmax(*decl,-M_PI/2.);
   *decl = fmin(*decl, M_PI/2.);
 }
-
 #endif
 
 #endif
