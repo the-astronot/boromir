@@ -17,16 +17,17 @@ def startRender():
 	global isRendering
 	isRendering = True
 
+
 def endRender(a,b):
 	global isRendering
 	isRendering = False
 
 
-def render(camera,pos,sun_angles,moon_config,sun_config,render_config,outdir):
+def render(camera,pos,sun_angles,config,outdir):
 	global isRendering
 	if not os.path.exists(outdir):
 		os.makedirs(outdir)
-	scene = setup(moon_config,sun_config,camera,render_config)
+	scene = setup(camera,config)
 	if scene is None:
 		return
 	# Lets try for a quick set of images
@@ -52,7 +53,7 @@ def render(camera,pos,sun_angles,moon_config,sun_config,render_config,outdir):
 	return
 	
 
-def setup(moon_config,sun_config,camera,render_config):
+def setup(camera,config):
 	"""
 	Taking care of all of the boring setup stuff
 	"""
@@ -88,9 +89,9 @@ def setup(moon_config,sun_config,camera,render_config):
 	moon_mat = bpy.data.materials["MoonRocks"]
 	nodes = moon_mat.node_tree.nodes
 	principled_bsdf = nodes.get("Principled BSDF")
-	principled_bsdf.inputs.get("Roughness").default_value = moon_config[0]
-	principled_bsdf.inputs.get("Metallic").default_value = moon_config[1]
-	principled_bsdf.inputs.get("IOR").default_value = moon_config[2]
+	principled_bsdf.inputs.get("Roughness").default_value = float(config["moon"]["roughness"])
+	principled_bsdf.inputs.get("Metallic").default_value = float(config["moon"]["metallic"])
+	principled_bsdf.inputs.get("IOR").default_value = float(config["moon"]["ior"])
 	principled_bsdf.inputs.get("Coat Weight").default_value = 0
 	principled_bsdf.inputs.get("Sheen Weight").default_value = 0
 	principled_bsdf.inputs.get("Emission Strength").default_value = 0
@@ -98,8 +99,8 @@ def setup(moon_config,sun_config,camera,render_config):
 	if contrast_node is None:
 		print("No Contrast Node Found")
 	else:
-		contrast_node.inputs.get("Bright").default_value = 1.0
-		contrast_node.inputs.get("Contrast").default_value = 1.0
+		contrast_node.inputs.get("Bright").default_value = float(config["moon"]["bright"])
+		contrast_node.inputs.get("Contrast").default_value = float(config["moon"]["contrast"])
 
 	# Config Sun
 	if "Light" in bpy.data.objects:
@@ -115,11 +116,10 @@ def setup(moon_config,sun_config,camera,render_config):
 	sun.select_set(True)
 	view_layer.objects.active = sun
 
-	sun.data.energy = sun_config[0]
-	sun.data.color = sun_config[1]
-	sun.data.angle = sun_config[2]
+	sun.data.energy = float(config["sun"]["energy"])
+	sun.data.color = array(config["sun"]["color"],dtype=np.float32)
+	sun.data.angle = float(config["sun"]["angle"])
 	sun.data.use_contact_shadow = True
-	#sun.data.shadow_buffer_bias = 100
 	sun.data.shadow_trace_distance = np.inf
 	sun.data.shadow_cascade_max_distance = np.inf
 	sun.rotation_mode = "YXZ"
@@ -136,18 +136,24 @@ def setup(moon_config,sun_config,camera,render_config):
 	# Config Rendering
 	bpy.app.handlers.render_post.append(endRender)
 	scene.render.engine = "CYCLES"
-	scene.render.threads_mode = "AUTO"
+	scene.render.threads_mode = config["threads_mode"]
 	scene.render.use_persistent_data = True
-	scene.render.threads = render_config[0]
-	scene.cycles.device = render_config[1]
-	scene.cycles.samples = render_config[2]
+	scene.render.threads = int(config["threads"])
+	scene.cycles.device = config["device"]
+	scene.cycles.samples = int(config["samples"])
 	scene.cycles.use_denoising = True
 
 	return scene
 
 
 def moveObject(obj,state):
-	obj.rotation_quaternion = mu.Quaternion(state.attitude.toArray())
+	dcm = state.attitude.toDCM()
+	offset = np.array([[1,0,0],
+										[0,-1,0],
+										[0,0,-1]])
+	cam_quat = Quaternion()
+	cam_quat.fromDCM(dcm@offset)
+	obj.rotation_quaternion = mu.Quaternion(cam_quat.toArray())
 	print(obj.rotation_quaternion)
 	obj.location.x = state.position[0]
 	obj.location.y = state.position[1]
@@ -186,11 +192,11 @@ isRendering = False
 
 if __name__ == "__main__":
 	RADIUS = 1737400
-	BASE_PATH = dirname(abspath(__file__))
+	BASE_PATH = dirname(dirname(abspath(__file__)))
 	CONFIG_PATH = join(BASE_PATH,"configs")
 	default_config = "blender.conf"
 	config = load_config(join(CONFIG_PATH,default_config))
-	for i,arg in enumerate(sys.args[1:]):
+	for i,arg in enumerate(sys.argv[1:]):
 		print("Loading config {}: {}...".format(i,arg))
 		config = load_config(join(CONFIG_PATH,arg),old_config=config)
 	# Moon config = [roughness, metallic, IOR, ]
@@ -206,16 +212,15 @@ if __name__ == "__main__":
 	render_config	= [8,"GPU",1024]
 	#render([3237.4],[[0,0]],[0,30,60,90],moon_config,sun_config,cam_config,render_config,"./outimages")
 	#lons = [0,30,60,90,120,150,180,210,240,270,300,330]
-	lons = [0]
-	#lats = [90,60,30,0,-30,-60,-90]
+	lons = [180]
 	lats = [0]
 	locations = []
 	for lat in lats:
 		for lon in lons:
 			locations.append([lat,lon])
-	sun_angles = [x+180 for x in range(-90,91,5)]
+	sun_angles = [x for x in range(0,181,10)]
 	
-	quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
+	quatWorldtoCam = Quaternion(0.5,[0.5,0.5,0.5])
 	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
@@ -237,8 +242,7 @@ if __name__ == "__main__":
 	print(np.rad2deg(camera.FOV_x),np.rad2deg(camera.FOV_y))
 
 
-	render(camera,locations,sun_angles,moon_config,sun_config,render_config,"../outimages")
-	#old_render([3237.4],locations,sun_angles,moon_config,sun_config,cam_config,render_config,"./outimages")
+	render(camera,locations,sun_angles,config,"../outimages")
 	# Save Mainfile
 	#bpy.ops.wm.save_mainfile()
 	exit(0)

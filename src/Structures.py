@@ -64,7 +64,7 @@ class Quaternion():
 			self.v[1] = mod*(dcm[2,0]-dcm[0,2])
 			self.v[2] = mod*(dcm[0,1]-dcm[1,0])
 			self.s = mod*(4*qs_sq)
-		print(self.s,self.v)
+		#print(self.s,self.v)
 		self.normalize()
 
 	def normalize(self):
