@@ -152,8 +152,9 @@ def moveObject(obj,state):
 										[0,-1,0],
 										[0,0,-1]])
 	cam_quat = Quaternion()
-	cam_quat.fromDCM(dcm@offset)
+	cam_quat.fromDCM(offset@dcm)
 	obj.rotation_quaternion = mu.Quaternion(cam_quat.toArray())
+	#obj.rotation_quaternion = mu.Quaternion(state.attitude.toArray())
 	print(obj.rotation_quaternion)
 	obj.location.x = state.position[0]
 	obj.location.y = state.position[1]
@@ -196,46 +197,38 @@ if __name__ == "__main__":
 	CONFIG_PATH = join(BASE_PATH,"configs")
 	default_config = "blender.conf"
 	config = load_config(join(CONFIG_PATH,default_config))
-	for i,arg in enumerate(sys.argv[1:]):
+	for i,arg in enumerate(sys.argv[5:]):
 		print("Loading config {}: {}...".format(i,arg))
 		config = load_config(join(CONFIG_PATH,arg),old_config=config)
-	# Moon config = [roughness, metallic, IOR, ]
-	moon_config = [1.0,0.0,1.450]
-	# Sun config = [Irradiance (W/m^2), Color(RGB 0-1), Angle(Rad)]
-	sun_config = [1,[1,1,1],0.009304]
-	#sun_config = [100,[1,1,1],0.009304]
-	# Cam config = [focal_length,HNumPix,VNumPix,]
-	#cam_config = [102.1,1024,1024]
-	#cam_config = [102.1,3840,2160]
-	cam_config = [102.1,2592,2048]
-	# Render config = [num_threads,CPUvsGPU,shadows/pixel]
-	render_config	= [8,"GPU",1024]
-	#render([3237.4],[[0,0]],[0,30,60,90],moon_config,sun_config,cam_config,render_config,"./outimages")
-	#lons = [0,30,60,90,120,150,180,210,240,270,300,330]
-	lons = [180]
+	lons = [0]
 	lats = [0]
 	locations = []
 	for lat in lats:
 		for lon in lons:
 			locations.append([lat,lon])
-	sun_angles = [x for x in range(0,181,10)]
+	sun_angles = [x for x in range(180,360,10)]
 	
-	quatWorldtoCam = Quaternion(0.5,[0.5,0.5,0.5])
+	#quatWorldtoCam = Quaternion(0.5,[0.5,0.5,0.5])
+	quatWorldtoCam = Quaternion()
+	quatWorldtoCam.fromDCM(array([[0,0,1],
+																[-1,0,0],
+																[0,-1,0]]))
+	#quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
 	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(0.1,[0,0,-0.995])
 	sc_quat = Quaternion(1,[0,0,0])
-	#sc_quat = Quaternion(0.216668887,[0.702665992,-0.161286356,-0.658256643])
+	
 	#pos = array([2450487.68,-1768944.776,951442.2338])
 	quat = Quaternion()
-	#dcm = sc_quat.toDCM()@quatWorldtoCam.toDCM()
-	dcm = quatWorldtoCam.toDCM()@sc_quat.toDCM()
+	dcm = quatWorldtoCam.toDCM().T@sc_quat.toDCM()
 	print(sc_quat.toDCM())
 	print(quatWorldtoCam.toDCM())
 	print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([-RADIUS*3,0,0])
+	#quat = Quaternion(0.216668887,[-0.702665992,0.161286356,0.658256643])
+	pos = array([-RADIUS*7,0,0])
 	state = State(pos,quat)
 	camera = get_camera("../configs/cameras/testcam.json")
 	camera.set_state(state)

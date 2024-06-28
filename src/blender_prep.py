@@ -131,9 +131,6 @@ if __name__ == "__main__":
 	quatWorldtoCam.fromDCM(array([[0,0,1],
 																[-1,0,0],
 																[0,-1,0]]))
-	#quatWorldtoCam.fromDCM(array([[0,0,1],
-	#														 	[1,0,0],
-	#														 	[0,1,0]]).T)
 	#sc_quat = Quaternion(0,[0,0,1])
 	#sc_quat = Quaternion(0.707,[0,-0.707,0])
 	#sc_quat = Quaternion(.707,[0,0,-.707])
@@ -144,11 +141,12 @@ if __name__ == "__main__":
 	quat = Quaternion()
 	#print(sc_quat)
 	dcm = sc_quat.toDCM().T@quatWorldtoCam.toDCM()
-	print(sc_quat.toDCM())
-	print(quatWorldtoCam.toDCM())
-	print(dcm)
+	#print(sc_quat.toDCM())
+	#print(quatWorldtoCam.toDCM())
+	#print(dcm)
 	quat.fromDCM(dcm)
-	pos = array([-RADIUS*3,0,0])
+	#quat = Quaternion(0.216668887,[-0.702665992,0.161286356,0.658256643])
+	pos = array([-RADIUS*7,0,0])
 	state = State(pos,quat)
 	camera.set_state(state)
 
@@ -179,22 +177,22 @@ if __name__ == "__main__":
 	## Trying out the Cpp Library
 	libPoints = ct.cdll.LoadLibrary("cpp/libPoints.so")
 	create_mesh = libPoints.findPoints
-	create_mesh.argtypes = [(ct.c_double*3),
-												 	(ct.c_double*9),
+	create_mesh.argtypes = [(ct.c_float*3),
+												 	(ct.c_float*9),
 													(ct.c_int*2),
-													(ct.c_double*2),
+													(ct.c_float*2),
 													ct.POINTER(ct.c_float),
 													ct.POINTER(ct.c_float),
 													(ct.c_ulong*2),
-													ct.c_double,
-													(ct.c_double*2),
+													ct.c_float,
+													(ct.c_float*2),
 													ct.c_char_p]
 	# Setup data
 	print("Setting Up Data")
-	pos_c = (ct.c_double*3)(*(camera.state.position))
-	dcm_c = (ct.c_double*9)(*(camera.state.attitude.toDCM().flatten()))
+	pos_c = (ct.c_float*3)(*(camera.state.position))
+	dcm_c = (ct.c_float*9)(*(camera.state.attitude.toDCM().flatten()))
 	camsize_c = (ct.c_int*2)(*[camera.Ncols,camera.Nrows])
-	offset_c = (ct.c_double*2)(*camera.OffsetPix)
+	offset_c = (ct.c_float*2)(*camera.OffsetPix)
 	meshsize = np.array(mesh.shape)
 	colorsize = np.array(colors.shape)
 	meshsize_flt = np.prod(meshsize)
@@ -204,8 +202,8 @@ if __name__ == "__main__":
 	mesh_c = (ct.c_float*meshsize_flt)()
 	colors_c = (ct.c_float*colorsize_flt)()
 	meshsize_c = (ct.c_ulong*2)(*meshsize[:2])
-	SubSamples_c = ct.c_double(camera.SubSamples)
-	fov_c = (ct.c_double*2)(camera.FOV_x,camera.FOV_y)
+	SubSamples_c = ct.c_float(camera.SubSamples)
+	fov_c = (ct.c_float*2)(camera.FOV_x,camera.FOV_y)
 	dirname_c = ct.create_string_buffer("./".encode())
 	status = create_mesh(pos_c,dcm_c,camsize_c,offset_c,mesh_c,colors_c,meshsize_c,SubSamples_c,fov_c,dirname_c)
 	print("Status: {}".format(status))

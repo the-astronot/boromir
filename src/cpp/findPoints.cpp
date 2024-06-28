@@ -1,31 +1,35 @@
 #include "findPoints.h"
 
 extern "C" {
-int findPoints(double position[3], 
-							double dcm[9], 
+int findPoints(float position[3], 
+							float dcm[9], 
 							int camsize[2], 
-							double offsetsize[2], 
+							float offsetsize[2], 
 							float* mesh,
 							float* colors,
 							ulong meshsize[2],
-							double N_SubPixels,
-							double fov[2],
+							float N_SubPixels,
+							float fov[2],
 							const char* dirname) 
 							{
 	
-	double2 lin_camsize = {(float)camsize[0],(float)camsize[1]};
-	double2 lin_fov = {fov[0],fov[1]};
-	double3 lin_position = {position[0],position[1],position[2]};
-	double3x3 mat_dcm = {{dcm[0],dcm[1],dcm[2]},{dcm[3],dcm[4],dcm[5]},{dcm[6],dcm[7],dcm[8]}};
-	double3 los;
+	float2 lin_camsize = {(float)camsize[0],(float)camsize[1]};
+	float2 lin_fov = {fov[0],fov[1]};
+	float3 lin_position = {position[0],position[1],position[2]};
+	float3x3 mat_dcm = {{dcm[0],dcm[1],dcm[2]},{dcm[3],dcm[4],dcm[5]},{dcm[6],dcm[7],dcm[8]}};
+	float3 los;
 	int status;
-	double3 intercept;
-	double3 new_los;
+	float3 intercept;
+	float3 new_los;
 	double c_u,c_v;
 	ulong idx;
 	float RADIUS = 1737400;
+	int verbose = 1;
+	int complete,barsize;
 
 	load_maps();
+
+	barsize = 40;
 
 	for (ulong u=0; u<meshsize[0]; u++) {
 		for (ulong v=0; v<meshsize[1]; v++) {
@@ -48,6 +52,23 @@ int findPoints(double position[3],
 			}
 			findPoint(intercept,colors+idx*2,mesh+(idx*3));
 		}
+		// Status Bar
+		if (verbose && ((u%50 == 0) || (u == meshsize[0]-1))) {
+			complete = ((barsize*u)/meshsize[0]);
+			std::cout << "\r[";
+			for (int i=0; i<barsize; i++) {
+				if (i<=complete) {
+					std::cout << "#";
+				} else {
+					std::cout << "_";
+				}
+			}
+			std::cout << "]";
+		}
+	}
+	// Status Bar
+	if (verbose) {
+		std::cout << std::endl;
 	}
 
 	close_maps();
@@ -59,15 +80,15 @@ int findPoints(double position[3],
 	return 0;
 }
 
-int uv2_los(double u, double v, double NSubPixels, double2 fov, double2 camsize, double3* los) {
-	double ifov_u = fov[0]/(camsize[0]);
-	double ifov_v = fov[1]/(camsize[1]);
+int uv2_los(float u, float v, float NSubPixels, float2 fov, float2 camsize, float3* los) {
+	float ifov_u = fov[0]/(camsize[0]);
+	float ifov_v = fov[1]/(camsize[1]);
 
 	(*los)[0] = (u-(camsize[0]/2))*ifov_u;
 	(*los)[1] = -(v-(camsize[1]/2))*ifov_v;
 	(*los)[2] = 1.0;
 
-	double norm = sqrt(sum(pow(*los,2)));
+	float norm = sqrt(sum(pow(*los,2)));
 
 	*los /= norm;
 
@@ -141,9 +162,9 @@ int write_to_files(float* mesh, float* colors, ulong meshsize[2], const char* di
 	return 0;
 }
 
-int get_intersection(double3 pos, double3 los, float radius, double3* intercept) {
-	double nabla,d,d1,d2;
-	double edge_thresh = 10000;
+int get_intersection(float3 pos, float3 los, float radius, float3* intercept) {
+	float nabla,d,d1,d2;
+	float edge_thresh = 10000;
 
 	nabla = pow(dot(los,pos),2)-(sum(pow(pos,2))-pow(radius,2));
 
@@ -173,7 +194,7 @@ int get_intersection(double3 pos, double3 los, float radius, double3* intercept)
 	return 0;
 }
 
-int findPoint(double3 intercept, float* color, float* point) {
+int findPoint(float3 intercept, float* color, float* point) {
 	// Get Moon UV
 	float r;
 	double ra,decl;
@@ -205,4 +226,3 @@ int findPoint(double3 intercept, float* color, float* point) {
 
 
 }
-

@@ -8,24 +8,24 @@
 using namespace linalg::aliases;
 
 extern "C"{
-int uv2_los(double u, double v, double NSubPixels, double2 fov,double2 camsize, double3 *los);
+int uv2_los(float u, float v, float NSubPixels, float2 fov, float2 camsize, float3 *los);
 
 int vertIsNull(float* mesh);
 
 int write_to_files(float* mesh, float* colors, ulong meshsize[2], const char* dirname);
 
-int get_intersection(double3 pos, double3 los, float radius, double3* intercept);
+int get_intersection(float3 pos, float3 los, float radius, float3* intercept);
 
-int findPoint(double3 intercept, float* color, float* point);
+int findPoint(float3 intercept, float* color, float* point);
 
-int findPoints(double position[3], 
-							double dcm[9], 
+int findPoints(float position[3], 
+							float dcm[9], 
 							int camsize[2], 
-							double offsetsize[2], 
+							float offsetsize[2], 
 							float* mesh,
 							float* colors,
 							ulong meshsize[2],
-							double N_SubPixels,
-							double fov[2],
+							float N_SubPixels,
+							float fov[2],
 							const char* dirname);
 }
