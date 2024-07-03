@@ -20,8 +20,8 @@ class Camera():
 			self.state = state
 
 	def default_init(self):
-		self.FOV_x = 0.1
-		self.FOV_y = 0.1
+		self.FOV_x = 10.0
+		self.FOV_y = 10.0
 		self.F_Stop = 2.8
 		self.NumBlades = 5
 		self.Nrows = 1024
@@ -34,9 +34,28 @@ class Camera():
 		for key in json:
 			if key in self.types:
 				setattr(self,key,self.types[key](json[key]))
+		self.check_camera()
+
+	def to_dict(self):
+		data = {}
+		for attr in self.__dict__:
+			data[attr] = getattr(self,attr)
+		return data
 
 	def set_state(self,state):
 		self.state = state
+
+	def check_camera(self):
+		pix_ratio = self.Ncols/self.Nrows
+		fov_ratio = self.FOV_x/self.FOV_y
+		if pix_ratio != fov_ratio:
+			print("WARNING: FOV and Pixel Ratios Don't Match")
+			self.FOV_y = self.FOV_x/pix_ratio
+			print("         FOV_y Set to {}".format(self.FOV_y))
+		if self.FOV_x < 0 or self.FOV_y < 0:
+			print("ERROR: Camera FOV(s) are negative")
+			return 1
+		return 0
 
 
 def get_camera(filename):

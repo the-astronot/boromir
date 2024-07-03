@@ -8,6 +8,7 @@
 *.jpg
 *.jpeg
 *.png
+outimages/
 
 # C Stuff
 *.o

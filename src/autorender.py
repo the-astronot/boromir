@@ -1,9 +1,10 @@
 import os
-from os.path import join,abspath,dirname
+from os.path import join,abspath,dirname,basename,exists
 import sys
 import bpy
 import numpy as np
-from numpy import pi,cos,sin,arccos,arcsin,arctan,deg2rad,rad2deg,array
+from numpy import pi,arccos,deg2rad,rad2deg,array,arctan2
+from numpy.linalg import norm
 import time
 import mathutils as mu
 import json
@@ -11,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Local imports
 from Structures import Quaternion,State
 from Camera import Camera,get_camera
+from metadata import create_metadata,camera2config
 
 
 def startRender():
@@ -23,34 +25,27 @@ def endRender(a,b):
 	isRendering = False
 
 
-def render(camera,pos,sun_angles,config,outdir):
+def render(camera,sun_state,earth_state,config,name):
 	global isRendering
+	outdir = config["OUTDIR"]
 	if not os.path.exists(outdir):
 		os.makedirs(outdir)
 	scene = setup(camera,config)
 	if scene is None:
-		return
-	# Lets try for a quick set of images
+		return 2
 	sun = bpy.data.objects["Light"]
 	cam = scene.camera
 	cam.rotation_mode = 'QUATERNION'
 	moveObject(cam,camera.state)
-	dcm = state.attitude.toDCM()
-	for sa in sun_angles:
-		sunAngleXYZ = [90,0,90+pos[0][1]-(90-sa)]
-		print(sunAngleXYZ)
-		moveSunObject(sun,[0,0,0],sunAngleXYZ)
-		filename =  os.path.join(outdir,"{:.0f}X_{:.0f}Y_{:.0f}Z_sa{:.0f}_dcm{}".format(camera.state.position[0],camera.state.position[1],camera.state.position[2],sa,str(dcm).replace("\n","")))
-		scene.render.filepath = filename
-		if os.path.exists(filename): # Don't re-render rendered image
-			print("File: {} already exists, skipping...".format(os.basename(filename)))
-			continue
-		startRender()
-		bpy.ops.render.render("INVOKE_DEFAULT",write_still=True)
-		while isRendering is True:
-			time.sleep(0.1)
-		print("Finished Rendering Image!")
-	return
+	moveSunObject(sun,[0,0,0],sun_state)
+	filename =  os.path.join(outdir,name)+".png"
+	scene.render.filepath = filename
+	if exists(filename): # Don't re-render rendered image
+		print("File: {} already exists, skipping...".format(basename(filename)))
+		return 1
+	startRender()
+	bpy.ops.render.render("INVOKE_DEFAULT",write_still=True)
+	return 0
 	
 
 def setup(camera,config):
@@ -71,9 +66,9 @@ def setup(camera,config):
 	scene.camera = cam
 	# Config Camera
 	cam.data.lens_unit = "FOV"
-	cam.data.angle = np.max([camera.FOV_x,camera.FOV_y])
+	cam.data.angle = camera.FOV_x
 	cam.data.clip_end = np.inf
-	cam.data.sensor_fit = "AUTO"
+	cam.data.sensor_fit = "HORIZONTAL"
 	#cam.data.dof.use_dof = True
 	cam.data.dof.focus_distance = np.inf
 	cam.data.dof.aperture_blades = camera.NumBlades
@@ -155,7 +150,7 @@ def moveObject(obj,state):
 	cam_quat.fromDCM(offset@dcm)
 	obj.rotation_quaternion = mu.Quaternion(cam_quat.toArray())
 	#obj.rotation_quaternion = mu.Quaternion(state.attitude.toArray())
-	print(obj.rotation_quaternion)
+	#print(obj.rotation_quaternion)
 	obj.location.x = state.position[0]
 	obj.location.y = state.position[1]
 	obj.location.z = state.position[2]
@@ -163,12 +158,10 @@ def moveObject(obj,state):
 
 
 def moveSunObject(obj, pos, angles):
-
-	# Position in km, angles in degrees
-	
-	obj.rotation_euler[0] = angles[0] * (pi / 180.0)
-	obj.rotation_euler[1] = angles[1] * (pi / 180.0)
-	obj.rotation_euler[2] = angles[2] * (pi / 180.0)
+	# Position in km, angles in radians
+	obj.rotation_euler[0] = angles[0]
+	obj.rotation_euler[1] = angles[1]
+	obj.rotation_euler[2] = angles[2]
 
 	obj.location.x = pos[0]
 	obj.location.y = pos[1]
@@ -178,6 +171,8 @@ def moveSunObject(obj, pos, angles):
 
 def load_config(filename,old_config=None):
 	new_config = {}
+	if not exists(filename):
+		print("Config: {} Not Found...".format(filename))
 	with open(filename,"r") as f:
 		new_config = json.load(f)
 	if old_config is not None:
@@ -197,45 +192,66 @@ if __name__ == "__main__":
 	CONFIG_PATH = join(BASE_PATH,"configs")
 	default_config = "blender.conf"
 	config = load_config(join(CONFIG_PATH,default_config))
-	for i,arg in enumerate(sys.argv[5:]):
-		print("Loading config {}: {}...".format(i,arg))
-		config = load_config(join(CONFIG_PATH,arg),old_config=config)
-	lons = [0]
-	lats = [0]
-	locations = []
-	for lat in lats:
-		for lon in lons:
-			locations.append([lat,lon])
-	sun_angles = [x for x in range(180,360,10)]
+	start = False
+	for i,arg in enumerate(sys.argv):
+		if arg == basename(__file__):
+			start = True
+		elif start:
+			print("Loading config {}: {}...".format(i,arg))
+			print(join(CONFIG_PATH,arg))
+			config = load_config(join(CONFIG_PATH,arg),old_config=config)
 	
-	#quatWorldtoCam = Quaternion(0.5,[0.5,0.5,0.5])
 	quatWorldtoCam = Quaternion()
 	quatWorldtoCam.fromDCM(array([[0,0,1],
 																[-1,0,0],
 																[0,-1,0]]))
-	#quatWorldtoCam = Quaternion(0.5,[0.5,-0.5,-0.5])
-	#sc_quat = Quaternion(0,[0,0,1])
-	#sc_quat = Quaternion(.707,[0,0,-.707])
-	#sc_quat = Quaternion(0.707,[0,-0.707,0])
-	#sc_quat = Quaternion(0.1,[0,0,-0.995])
-	sc_quat = Quaternion(1,[0,0,0])
-	
-	#pos = array([2450487.68,-1768944.776,951442.2338])
-	quat = Quaternion()
-	dcm = quatWorldtoCam.toDCM().T@sc_quat.toDCM()
-	print(sc_quat.toDCM())
-	print(quatWorldtoCam.toDCM())
-	print(dcm)
-	quat.fromDCM(dcm)
-	#quat = Quaternion(0.216668887,[-0.702665992,0.161286356,0.658256643])
-	pos = array([-RADIUS*7,0,0])
-	state = State(pos,quat)
-	camera = get_camera("../configs/cameras/testcam.json")
-	camera.set_state(state)
+	if "CAMERA" not in config:
+		print("ERROR: Camera not specified, exiting...")
+		exit(0)
+	camera = get_camera(join(CONFIG_PATH,"cameras",config["CAMERA"]))
+	config = camera2config(camera,old_config=config)
 	print(np.rad2deg(camera.FOV_x),np.rad2deg(camera.FOV_y))
-
-
-	render(camera,locations,sun_angles,config,"../outimages")
+	quat = Quaternion()
+	for i,state_data in enumerate(config["STATES"]):
+		if "NAME" in state_data:
+			name = state_data["NAME"]
+		else:
+			print("ERROR: No Image Name Specified, Skipping")
+		if "SC" in state_data:
+			sc_data = state_data["SC"]
+			sc_quat = Quaternion(float(sc_data["QUAT"]["s"]),array(sc_data["QUAT"]["v"]))
+			dcm = quatWorldtoCam.toDCM().T@sc_quat.toDCM()
+			pos = array(sc_data["POS"])
+			quat.fromDCM(dcm)
+		elif "CAM" in state_data:
+			cam_data = state_data["CAM"]
+			quat = Quaternion(float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
+			pos = array(cam_data["POS"])
+		else:
+			print("ERROR: Camera Not Found, Skipping...")
+			continue
+		camera.set_state(State(pos,quat))
+		if "SUN" in state_data:
+			sun_los = array(state_data["SUN"],dtype=np.float32)
+			sun_los /= norm(sun_los)
+			sun_ra = arctan2(sun_los[1],sun_los[0])
+			sun_decl = arccos(sun_los[2])
+			print("RA: {}, Decl: {}".format(sun_ra,sun_decl))
+			sun_state = array([sun_decl,0,sun_ra-pi/2])
+		else:
+			print("ERROR: Sun Not Found, Skipping...")
+			continue
+		if "EARTH" in state_data:
+			earth_data = state_data["EARTH"]
+			# TODO: Add Earth Stuff
+			earth_state = None
+		else:
+			earth_state = None
+		if render(camera,sun_state,earth_state,config,name) == 0:
+			create_metadata(config,i)
+		while isRendering is True:
+			time.sleep(0.1)
+		
 	# Save Mainfile
 	#bpy.ops.wm.save_mainfile()
 	exit(0)
