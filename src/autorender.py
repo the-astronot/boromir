@@ -38,9 +38,12 @@ def render(camera,sun_state,earth_state,config,name):
 	cam.rotation_mode = 'QUATERNION'
 	moveObject(cam,camera.state)
 	moveSunObject(sun,[0,0,0],sun_state)
-	filename =  os.path.join(outdir,name)+".png"
+	filename =  os.path.join(outdir,name)
+	scene.render.image_settings.color_mode = config["color_mode"]
+	scene.render.image_settings.color_depth = str(config["color_depth"])
+	scene.render.image_settings.file_format = config["file_ext"]
 	scene.render.filepath = filename
-	if exists(filename): # Don't re-render rendered image
+	if exists(filename) and int(config["re_render"])==0: # Don't re-render rendered image
 		print("File: {} already exists, skipping...".format(basename(filename)))
 		return 1
 	startRender()
@@ -143,6 +146,7 @@ def setup(camera,config):
 
 def moveObject(obj,state):
 	dcm = state.attitude.toDCM()
+	# Offset is used to account for blenders atrocious starting quaternion
 	offset = np.array([[1,0,0],
 										[0,-1,0],
 										[0,0,-1]])
@@ -219,13 +223,27 @@ if __name__ == "__main__":
 			print("ERROR: No Image Name Specified, Skipping")
 		if "SC" in state_data:
 			sc_data = state_data["SC"]
-			sc_quat = Quaternion(float(sc_data["QUAT"]["s"]),array(sc_data["QUAT"]["v"]))
-			dcm = quatWorldtoCam.toDCM().T@sc_quat.toDCM()
+			if "QUAT" in sc_data:
+				sc_quat = Quaternion(float(sc_data["QUAT"]["s"]),array(sc_data["QUAT"]["v"]))
+				dcm = quatWorldtoCam.toDCM().T@sc_quat.toDCM()
+			elif "DCM" in sc_data:
+				sc_dcm = array(sc_data["DCM"],dtype=np.float32)
+				dcm = quatWorldtoCam.toDCM()@sc_dcm
+			else:
+				print("ERROR: SC has no attitude data, Skipping...")
+				continue
 			pos = array(sc_data["POS"])
 			quat.fromDCM(dcm)
 		elif "CAM" in state_data:
 			cam_data = state_data["CAM"]
-			quat = Quaternion(float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
+			if "QUAT" in cam_data:
+				quat = Quaternion(float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
+			elif "DCM" in cam_data:
+				dcm = array(cam_data["DCM"],dtype=np.float32)
+				quat.fromDCM(dcm)
+			else:
+				print("ERROR: Cam has no attitude data, Skipping...")
+				continue
 			pos = array(cam_data["POS"])
 		else:
 			print("ERROR: Camera Not Found, Skipping...")
@@ -251,7 +269,5 @@ if __name__ == "__main__":
 			create_metadata(config,i)
 		while isRendering is True:
 			time.sleep(0.1)
-		
-	# Save Mainfile
-	#bpy.ops.wm.save_mainfile()
+
 	exit(0)

@@ -7,6 +7,8 @@ int findPoints(float position[3],
 							float offsetsize[2], 
 							float* mesh,
 							float* colors,
+							ulong* tris,
+							ulong* count,
 							ulong meshsize[2],
 							float N_SubPixels,
 							float fov[2],
@@ -53,7 +55,7 @@ int findPoints(float position[3],
 			findPoint(intercept,colors+idx*2,mesh+(idx*3));
 		}
 		// Status Bar
-		if (verbose && ((u%50 == 0) || (u == meshsize[0]-1))) {
+		if (verbose && ((u%100 == 0) || (u == meshsize[0]-1))) {
 			complete = ((barsize*u)/meshsize[0]);
 			std::cout << "\r[";
 			for (int i=0; i<barsize; i++) {
@@ -73,9 +75,11 @@ int findPoints(float position[3],
 
 	close_maps();
 
-	std::cout << "Writing to Files" << std::endl;
+	//std::cout << "Writing to Files" << std::endl;
+	//write_to_files(mesh,colors,meshsize,dirname);
 
-	write_to_files(mesh,colors,meshsize,dirname);
+	std::cout << "Matching" << std::endl;
+	create_tris(mesh,colors,tris,meshsize,count);
 
 	return 0;
 }
@@ -159,6 +163,39 @@ int write_to_files(float* mesh, float* colors, ulong meshsize[2], const char* di
 	std::fclose(colorptr);
 	std::fclose(faceptr);
 
+	return 0;
+}
+
+int create_tris(float* mesh, float* colors, ulong* tris, ulong meshsize[2], ulong* count) {
+	/*
+		Match up all of the triangles for the mesh
+	*/
+	ulong idxs[3];
+
+	*count = 0;
+	for (ulong u=1; u<meshsize[0]; u++) {
+		for (ulong v=1; v<meshsize[1]; v++) {
+			// Add Vertices
+			uv2vertid(u-1,v,meshsize[0],idxs);
+			uv2vertid(u-1,v-1,meshsize[0],idxs+1);
+			uv2vertid(u,v,meshsize[0],idxs+2);
+			if (!(vertIsNull(mesh+(3*idxs[0]))||vertIsNull(mesh+(3*idxs[1]))||vertIsNull(mesh+(3*idxs[2])))) {
+				for (ulong i=0; i<3; i++) {
+					tris[3*(*count)+i] = *(idxs+i);
+				}
+				(*count)++;
+			}
+			uv2vertid(u-1,v-1,meshsize[0],idxs);
+			uv2vertid(u,v-1,meshsize[0],idxs+1);
+			uv2vertid(u,v,meshsize[0],idxs+2);
+			if (!(vertIsNull(mesh+(3*idxs[0]))||vertIsNull(mesh+(3*idxs[1]))||vertIsNull(mesh+(3*idxs[2])))) {
+				for (ulong i=0; i<3; i++) {
+					tris[3*(*count)+i] = *(idxs+i);
+				}
+				(*count)++;
+			}
+		}
+	}
 	return 0;
 }
 

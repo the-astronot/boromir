@@ -1,17 +1,14 @@
 # Third time's a charm
-import os
-os.environ["OPENCV_IO_MAX_IMAGE_camera.ncols"] = pow(2,40).__str__()
-import cv2
 import numpy as np
 from numpy import sin,cos,deg2rad,arcsin,arccos,rad2deg,pi,arctan2
 from numpy import array,zeros,ones,dot,cross,sqrt,sum
 from numpy.linalg import norm
-import struct
 from Point import *
 from Structures import Quaternion,State
 import mathutil as mu
 import ctypes as ct
 from Camera import Camera,get_camera
+from blender_test_redux import build_mesh
 
 
 def rot_about(a,b,theta):
@@ -140,16 +137,17 @@ if __name__ == "__main__":
 	#sc_quat = Quaternion(0.999,[0.0,-.035,0.0])
 	#sc_quat = Quaternion(0.216668887,[0.702665992,-0.161286356,-0.658256643])
 	#sc_quat = Quaternion(0.5,[0.5,-0.5,0.5])
-	#pos = array([2450487.68,-1768944.776,951442.2338])
+	pos = array([2450487.68,-1768944.776,951442.2338])
 	quat = Quaternion()
 	#print(sc_quat)
-	dcm = sc_quat.toDCM().T@quatWorldtoCam.toDCM()
+	#dcm = sc_quat.toDCM().T@quatWorldtoCam.toDCM()
+	dcm = quatWorldtoCam.toDCM().T@sc_quat.toDCM()
 	#print(sc_quat.toDCM())
 	#print(quatWorldtoCam.toDCM())
 	#print(dcm)
 	quat.fromDCM(dcm)
-	#quat = Quaternion(0.216668887,[-0.702665992,0.161286356,0.658256643])
-	pos = array([3237400,0,0])
+	quat = Quaternion(0.216668887,[0.702665992,-0.161286356,-0.658256643])
+	#pos = array([3237400,0,0])
 	state = State(pos,quat)
 	camera.set_state(state)
 
@@ -186,6 +184,8 @@ if __name__ == "__main__":
 													(ct.c_float*2),
 													ct.POINTER(ct.c_float),
 													ct.POINTER(ct.c_float),
+													ct.POINTER(ct.c_uint64),
+													ct.POINTER(ct.c_uint64),
 													(ct.c_ulong*2),
 													ct.c_float,
 													(ct.c_float*2),
@@ -199,21 +199,28 @@ if __name__ == "__main__":
 	meshsize = np.array(mesh.shape)
 	colorsize = np.array(colors.shape)
 	meshsize_flt = np.prod(meshsize)
-	#meshsize_flt = meshsize[0]*meshsize[1]*meshsize[2]
 	colorsize_flt = np.prod(colorsize)
-	#colorsize_flt = colorsize[0]*colorsize[1]*colorsize[2]
 	mesh_c = (ct.c_float*meshsize_flt)()
 	colors_c = (ct.c_float*colorsize_flt)()
+	tris_c = (ct.c_uint64*(meshsize_flt*2))()
+	count_c = ct.c_uint64(0)
 	meshsize_c = (ct.c_ulong*2)(*meshsize[:2])
 	SubSamples_c = ct.c_float(camera.SubSamples)
 	fov_c = (ct.c_float*2)(camera.FOV_x,camera.FOV_y)
 	dirname_c = ct.create_string_buffer("./".encode())
-	status = create_mesh(pos_c,dcm_c,camsize_c,offset_c,mesh_c,colors_c,meshsize_c,SubSamples_c,fov_c,dirname_c)
+	# Calling the C script
+	print("Calling create_mesh")
+	status = create_mesh(pos_c,dcm_c,camsize_c,offset_c,mesh_c,colors_c,tris_c,ct.byref(count_c),meshsize_c,SubSamples_c,fov_c,dirname_c)
 	print("Status: {}".format(status))
-	meshsize = np.array([meshsize[1],meshsize[0],meshsize[2]])
-	colorsize = np.array([colorsize[1],colorsize[0],colorsize[2]])
+	meshsize = np.array([meshsize[1]*meshsize[0],meshsize[2]])
+	colorsize = np.array([colorsize[1]*colorsize[0],colorsize[2]])
 	mesh = np.frombuffer(mesh_c,dtype=np.float32).reshape(meshsize)
 	colors = np.frombuffer(colors_c,dtype=np.float32).reshape(colorsize)
-	print(mesh)
-	print(colors)
-	#print(norm(mesh,axis=2))
+	tris = np.frombuffer(tris_c,dtype=np.uint64).reshape((-1,3))
+	count = count_c.value
+	tris = tris[:count]
+	print(mesh[-1])
+	print(colors[-1])
+	print(count)
+	print(tris[-1])
+	build_mesh(mesh,tris,colors,"../maps/lroc_color_poles.tif","oneshot.blend")

@@ -5,6 +5,6 @@
 	"NumBlades": 5,
 	"Nrows": 2048,
 	"Ncols": 2592,
-	"SubSamples": 1,
+	"SubSamples": 2,
 	"OffsetPix": [100,100]
 }

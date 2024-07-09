@@ -29,9 +29,77 @@ def read_from_file(filename,dtype=np.float32,cols=3):
 	return data
 
 
+def build_mesh(verts,faces,colors,texture_file,outfile):
+	"""
+		Takes all of the data and builds a mesh
+	"""
+	# Create mesh
+	mesh = bpy.data.meshes.new("Moon")
+	obj = bpy.data.objects.new(mesh.name,mesh)
+	col = bpy.data.collections["Collection"]
+	col.objects.link(obj)
+	bpy.context.view_layer.objects.active = obj
+	# Fill in data
+	mesh.from_pydata(verts,[],faces)
+	print("Mesh Created!")
+	# UV mapping
+	me = obj.data
+	bpy.ops.object.mode_set(mode='EDIT')
+	bm = bmesh.from_edit_mesh(me)
+	#bpy.ops.object.mode_set(mode='OBJECT')
+
+	uv_layer = bm.loops.layers.uv.verify()
+
+	# adjust uv coordinates
+	for face in tqdm(bm.faces):
+			for loop in face.loops:
+					loop_uv = loop[uv_layer]
+					# use id position of the vertex as a uv coordinate id
+					loop_uv.uv = colors[loop.vert.index]
+
+	bmesh.update_edit_mesh(me)
+
+	# Material Creation
+	mat = bpy.data.materials.new(name="MoonRocks")
+	obj.data.materials.append(mat)
+
+	# Set the material to use the Principled BSDF shader
+	mat.use_nodes = True
+	nodes = mat.node_tree.nodes
+	principled_bsdf = nodes.get("Principled BSDF")
+	if principled_bsdf is None:
+			principled_bsdf = nodes.new(type="ShaderNodeBsdfPrincipled")
+	material_output = nodes.get("Material Output")
+	if material_output is None:
+			material_output = nodes.new(type="ShaderNodeOutputMaterial")
+	links = mat.node_tree.links
+	links.new(principled_bsdf.outputs["BSDF"], material_output.inputs["Surface"])
+
+	# Add an image texture to the material and connect it to the Base Color of the Principled BSDF
+	if os.path.exists(texture_file):
+		print("Found moon albedo file!")
+		image = bpy.data.images.load(texture_file)
+		texture_node = nodes.new(type="ShaderNodeTexImage")
+		texture_node.image = image
+		contrast_node = nodes.new(type="ShaderNodeBrightContrast")
+		contrast_node.inputs.get("Bright").default_value = 1.0
+		contrast_node.inputs.get("Contrast").default_value = 2.5
+		links.new(texture_node.outputs["Color"], contrast_node.inputs["Color"])
+		links.new(contrast_node.outputs["Color"], principled_bsdf.inputs["Base Color"])
+	else:
+		print("Could not find moon albedo file. Something is wrong.")
+
+	bpy.ops.object.mode_set(mode='OBJECT')
+
+	bpy.ops.file.pack_all()
+
+	# Save Mainfile
+	bpy.ops.wm.save_as_mainfile(filepath=outfile)
+	return 0
+
+
 if __name__ == "__main__":
 	print("{}:Starting!".format(time.localtime()))
-
 
 	data_path = "./"
 	image_path = os.path.join(data_path,"../maps")
@@ -39,13 +107,8 @@ if __name__ == "__main__":
 	verts_file = "verts.bin"
 	faces_file = "faces.bin"
 	colors_file = "colors.bin"
-
-	mesh = bpy.data.meshes.new("Moon")  # add the new mesh
-	obj = bpy.data.objects.new(mesh.name, mesh)
-	col = bpy.data.collections["Collection"]
-	col.objects.link(obj)
-	bpy.context.view_layer.objects.active = obj
-
+	outfile = data_path+"moon_twoshot.blend"
+	
 	verts = np.fromfile(verts_file,dtype=np.float32)
 	num_pts = int(verts.shape[0]/3)
 	verts = verts.reshape(num_pts,3)
@@ -63,6 +126,16 @@ if __name__ == "__main__":
 	colors = colors.reshape(num_colors,2)
 	print(colors.shape)
 
+	build_mesh(verts,faces,colors,outfile)
+
+	"""
+	# REMOVAL IN PROCESS
+	mesh = bpy.data.meshes.new("Moon")  # add the new mesh
+	obj = bpy.data.objects.new(mesh.name, mesh)
+	col = bpy.data.collections["Collection"]
+	col.objects.link(obj)
+	bpy.context.view_layer.objects.active = obj
+	
 	mesh.from_pydata(verts, edges, faces)
 
 	print("{}:Mesh Created!".format(time.localtime()))
@@ -119,5 +192,5 @@ if __name__ == "__main__":
 
 	# Save Mainfile
 	bpy.ops.wm.save_as_mainfile(filepath=data_path+"moon_test.blend")
-
+	"""
 	print("{}:Finishing!".format(time.localtime()))
