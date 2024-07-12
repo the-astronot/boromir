@@ -3,7 +3,7 @@ from os.path import join,abspath,dirname,basename,exists
 import sys
 import bpy
 import numpy as np
-from numpy import pi,arccos,deg2rad,rad2deg,array,arctan2
+from numpy import pi,arccos,deg2rad,rad2deg,array,arctan2,arcsin
 from numpy.linalg import norm
 import time
 import mathutils as mu
@@ -222,6 +222,7 @@ if __name__ == "__main__":
 		else:
 			print("ERROR: No Image Name Specified, Skipping")
 		if "SC" in state_data:
+			# Boresight aligned with X axis, Z is up
 			sc_data = state_data["SC"]
 			if "QUAT" in sc_data:
 				sc_quat = Quaternion(float(sc_data["QUAT"]["s"]),array(sc_data["QUAT"]["v"]))
@@ -235,6 +236,7 @@ if __name__ == "__main__":
 			pos = array(sc_data["POS"])
 			quat.fromDCM(dcm)
 		elif "CAM" in state_data:
+			# Boresight aligned with Z axis, X is right
 			cam_data = state_data["CAM"]
 			if "QUAT" in cam_data:
 				quat = Quaternion(float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
@@ -253,7 +255,7 @@ if __name__ == "__main__":
 			sun_los = array(state_data["SUN"],dtype=np.float32)
 			sun_los /= norm(sun_los)
 			sun_ra = arctan2(sun_los[1],sun_los[0])
-			sun_decl = arccos(sun_los[2])
+			sun_decl = arcsin(sun_los[2])
 			print("RA: {}, Decl: {}".format(sun_ra,sun_decl))
 			sun_state = array([sun_decl,0,sun_ra-pi/2])
 		else:
