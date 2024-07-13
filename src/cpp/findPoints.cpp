@@ -26,7 +26,7 @@ int findPoints(float position[3],
 	double c_u,c_v;
 	ulong idx;
 	float RADIUS = 1737400;
-	int verbose = 1;
+	int verbose = 0;
 	int complete,barsize;
 
 	load_maps();

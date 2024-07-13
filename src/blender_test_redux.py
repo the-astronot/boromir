@@ -29,10 +29,17 @@ def read_from_file(filename,dtype=np.float32,cols=3):
 	return data
 
 
-def build_mesh(verts,faces,colors,texture_file,outfile):
+def build_mesh(verts,faces,colors,texture_file,outfile,interactive=True):
 	"""
 		Takes all of the data and builds a mesh
 	"""
+	# Delete old data
+	if "Moon" in bpy.data.meshes:
+		mesh = bpy.data.meshes["Moon"]
+		bpy.data.meshes.remove(mesh)
+	if "Moon" in bpy.data.objects:
+		obj = bpy.data.objects["Moon"]
+		bpy.data.objects.remove(obj)
 	# Create mesh
 	mesh = bpy.data.meshes.new("Moon")
 	obj = bpy.data.objects.new(mesh.name,mesh)
@@ -51,7 +58,12 @@ def build_mesh(verts,faces,colors,texture_file,outfile):
 	uv_layer = bm.loops.layers.uv.verify()
 
 	# adjust uv coordinates
-	for face in tqdm(bm.faces):
+	if interactive:
+		faces = tqdm(bm.faces)
+	else:
+		faces = bm.faces
+	print("Building UV Loops")
+	for face in faces:
 			for loop in face.loops:
 					loop_uv = loop[uv_layer]
 					# use id position of the vertex as a uv coordinate id
@@ -60,38 +72,42 @@ def build_mesh(verts,faces,colors,texture_file,outfile):
 	bmesh.update_edit_mesh(me)
 
 	# Material Creation
-	mat = bpy.data.materials.new(name="MoonRocks")
-	obj.data.materials.append(mat)
+	if "MoonRocks" not in bpy.data.materials:
+		mat = bpy.data.materials.new(name="MoonRocks")
+		obj.data.materials.append(mat)
 
-	# Set the material to use the Principled BSDF shader
-	mat.use_nodes = True
-	nodes = mat.node_tree.nodes
-	principled_bsdf = nodes.get("Principled BSDF")
-	if principled_bsdf is None:
-			principled_bsdf = nodes.new(type="ShaderNodeBsdfPrincipled")
-	material_output = nodes.get("Material Output")
-	if material_output is None:
-			material_output = nodes.new(type="ShaderNodeOutputMaterial")
-	links = mat.node_tree.links
-	links.new(principled_bsdf.outputs["BSDF"], material_output.inputs["Surface"])
+		# Set the material to use the Principled BSDF shader
+		mat.use_nodes = True
+		nodes = mat.node_tree.nodes
+		principled_bsdf = nodes.get("Principled BSDF")
+		if principled_bsdf is None:
+				principled_bsdf = nodes.new(type="ShaderNodeBsdfPrincipled")
+		material_output = nodes.get("Material Output")
+		if material_output is None:
+				material_output = nodes.new(type="ShaderNodeOutputMaterial")
+		links = mat.node_tree.links
+		links.new(principled_bsdf.outputs["BSDF"], material_output.inputs["Surface"])
 
-	# Add an image texture to the material and connect it to the Base Color of the Principled BSDF
-	if os.path.exists(texture_file):
-		print("Found moon albedo file!")
-		image = bpy.data.images.load(texture_file)
-		texture_node = nodes.new(type="ShaderNodeTexImage")
-		texture_node.image = image
-		contrast_node = nodes.new(type="ShaderNodeBrightContrast")
-		contrast_node.inputs.get("Bright").default_value = 1.0
-		contrast_node.inputs.get("Contrast").default_value = 2.5
-		links.new(texture_node.outputs["Color"], contrast_node.inputs["Color"])
-		links.new(contrast_node.outputs["Color"], principled_bsdf.inputs["Base Color"])
+		# Add an image texture to the material and connect it to the Base Color of the Principled BSDF
+		if os.path.exists(texture_file):
+			print("Found moon albedo file!")
+			image = bpy.data.images.load(texture_file)
+			texture_node = nodes.new(type="ShaderNodeTexImage")
+			texture_node.image = image
+			contrast_node = nodes.new(type="ShaderNodeBrightContrast")
+			contrast_node.inputs.get("Bright").default_value = 1.0
+			contrast_node.inputs.get("Contrast").default_value = 2.5
+			links.new(texture_node.outputs["Color"], contrast_node.inputs["Color"])
+			links.new(contrast_node.outputs["Color"], principled_bsdf.inputs["Base Color"])
+		else:
+			print("Could not find moon albedo file. Something is wrong.")
+		bpy.ops.file.pack_all()
 	else:
-		print("Could not find moon albedo file. Something is wrong.")
+		print("Found Existing Moon Material")
+		mat = bpy.data.materials["MoonRocks"]
+		obj.data.materials.append(mat)
 
 	bpy.ops.object.mode_set(mode='OBJECT')
-
-	bpy.ops.file.pack_all()
 
 	# Save Mainfile
 	bpy.ops.wm.save_as_mainfile(filepath=outfile)

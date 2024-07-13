@@ -1,5 +1,7 @@
 import json
-from os.path import join
+import sys
+import os
+from os.path import join,basename,relpath
 
 
 def get_data(_to,_to_name,_from,_from_name):
@@ -63,3 +65,47 @@ def create_metadata(config,state_idx):
 	with open(join(config["OUTDIR"],md_file),"w+") as f:
 		json.dump(data,f,indent=2)
 	return
+
+
+def group_to_tsv(filepath,outfile="all_data.tsv",delimiter="\t"):
+	all_keys = {"filename":1}
+	all_data = []
+	all_jsons = []
+	# Load all data in
+	for(root,_,files) in os.walk(filepath):
+		for file in files:
+			if file.endswith(".json"):
+				all_jsons.append(join(root,file))
+	for file in all_jsons:
+		basefile = relpath(file,filepath).split(".")[0]
+		data = {}
+		with open(file,"r") as f:
+			data = json.load(f)
+		for key in data:
+			if not key in all_keys:
+				all_keys[key] = 1
+		data["filename"] = basefile
+		all_data.append(data)
+	# Write to (C)SV
+	with open(outfile,"w+") as f:
+		# Set up Header
+		header = ""
+		for key in all_keys:
+			header += "{}{}".format(key,delimiter)
+		header = header[:-1]+"\n" # Skip the last delimiter, finish table
+		f.write(header)
+		for filedata in all_data:
+			line = ""
+			for key in all_keys:
+				data = "N/A"
+				if key in filedata:
+					data = filedata[key]
+				line += "{}{}".format(data,delimiter)
+			line = line[:-1]+"\n"
+			f.write(line)
+	return
+
+
+if __name__ == "__main__":
+	filepath = sys.argv[1]
+	group_to_tsv(filepath)

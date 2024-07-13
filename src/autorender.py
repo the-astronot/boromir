@@ -239,7 +239,7 @@ if __name__ == "__main__":
 			# Boresight aligned with Z axis, X is right
 			cam_data = state_data["CAM"]
 			if "QUAT" in cam_data:
-				quat = Quaternion(float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
+				quat = Quaternion(-float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
 			elif "DCM" in cam_data:
 				dcm = array(cam_data["DCM"],dtype=np.float32)
 				quat.fromDCM(dcm)
@@ -257,7 +257,7 @@ if __name__ == "__main__":
 			sun_ra = arctan2(sun_los[1],sun_los[0])
 			sun_decl = arcsin(sun_los[2])
 			print("RA: {}, Decl: {}".format(sun_ra,sun_decl))
-			sun_state = array([sun_decl,0,sun_ra-pi/2])
+			sun_state = array([pi/2+sun_decl,0,sun_ra-pi/2])
 		else:
 			print("ERROR: Sun Not Found, Skipping...")
 			continue
