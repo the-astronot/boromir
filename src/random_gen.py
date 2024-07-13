@@ -94,10 +94,10 @@ if __name__ == "__main__":
 	camera_file = "testcam.json"
 	outdir = "../outimages/batch/"
 	interactive = False # Are you gonna sit there and watch it?
-
+	# End configs
 
 	camera = get_camera("../configs/cameras/{}".format(camera_file))
-	for i in range(2,n_mesh):
+	for i in range(3,n_mesh):
 		filename = "../configs/batch_{}.json".format(i)
 		state, los, offnadir = random_state([MOON_RADIUS+1500000,3*MOON_RADIUS])
 		print("STATE:\nPosition = {}\nAttitude = {}\nLoS = {}\nOffNadir = {}".format(state.position,state.attitude,los,offnadir))
@@ -142,4 +142,4 @@ if __name__ == "__main__":
 		print("Mesh is of size: {}".format(mesh.shape))
 		build_mesh(mesh,tris,colors,albedo_map,blend_file,interactive=interactive)
 		print("Sent to the Renderer")
-		sp.run(["blender","-b",blend_file,"-P","autorender.py",filename],capture_output=(not interactive))
+		sp.run(["blender","-b",blend_file,"-P","autorender.py",filename])
