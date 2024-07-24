@@ -54,7 +54,7 @@ if __name__ == '__main__':
 	## INPUTS
 	# Sensor Data
 	sensor_size = None #[0.06,0.06] # (meters,meters)
-	num_pixels = [1280,1280] # (unitless,unitless)
+	num_pixels = [3900,3900] # (unitless,unitless)
 	# FoV Data
 	camera_fov = [12.5,12.5] # (units,units)
 	camera_fov_units = "degrees"

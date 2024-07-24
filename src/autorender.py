@@ -79,6 +79,7 @@ def setup(camera,config):
 	cam.data.clip_end = np.inf
 	scene.render.resolution_x = camera.Ncols
 	scene.render.resolution_y = camera.Nrows
+	scene.view_settings.exposure = -8 # EV, testing
 
 	# Config Moon Material
 	if not "MoonRocks" in bpy.data.materials:

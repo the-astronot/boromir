@@ -2,6 +2,8 @@
 import cv2 as cv
 import numpy as np
 from tqdm import tqdm
+from scipy.optimize import least_squares
+from skimage import exposure
 
 
 SIFT = cv.SIFT_create()
@@ -15,20 +17,16 @@ def contrast(img,mult,median=127.5):
 def gain(img,mult):
 	return img*mult
 
-def vignette(img,level,strength):
+def vignette(img,level):
 	flip = False
 	if level == 0:
 		return img
 	elif level < 0:
 		level = np.abs(level)
 		flip = True
-	if strength < 0:
-		strength = 0
 	rows,cols,channels = img.shape[:3]
 	kernel = cv.getGaussianKernel(rows,rows/level)*cv.getGaussianKernel(cols,cols/level).T
 	mask = np.abs(kernel/kernel.max())
-	diff = mask-1.0
-	mask = 1.0+diff*strength
 	if flip:
 		mask = 2.0-mask
 	mask = np.where(mask>0,mask,0)
@@ -36,17 +34,50 @@ def vignette(img,level,strength):
 		img[:,:,i] = img[:,:,i]*mask
 	return img
 
+def offset(img,value):
+	return img+value
+
 
 def comp_imgs(img1,img2):
 	# TODO: Come up with a better metric
 	diff = img2-img1
-	mean = np.mean(diff)
-	diffdev = (diff-mean)**2
-	stddev = np.sqrt(np.mean(diffdev))
-	print("Mean is: {}, StdDev is: {}".format(mean,stddev))
+	#mean = np.mean(diff)
+	#diffdev = (diff-mean)**2
+	#stddev = np.sqrt(np.mean(diffdev))
+	#print("Mean is: {}, StdDev is: {}".format(mean,stddev))
 	#return np.sum(np.abs(diff))/np.prod(img1.shape[:2])
 	#return np.abs(mean)+2*np.abs(stddev)
-	return np.sum([np.sum(np.abs(diff[:2,:2])),np.sum(np.abs(diff[h//2-2:h//2+2,w//2-2:w//2+2]))])
+	#return np.sum([np.sum(np.abs(diff[:2,:2])),np.sum(np.abs(diff[h//2-2:h//2+2,w//2-2:w//2+2]))])
+	return diff.flatten()
+
+
+def build_map(img_gen,img_ref):
+	map = np.zeros((256,256,256,4))
+	rows,cols,channels = img_gen.shape
+	print("Rows: {}, Cols: {}, Chs: {}".format(rows,cols,channels))
+	for row in range(rows):
+		for col in range(cols):
+			gen_color = img_gen[row,col]
+			ref_color = img_ref[row,col]
+			map_color = map[gen_color[0],gen_color[1],gen_color[2],:3]
+			count = map[gen_color[0],gen_color[1],gen_color[2],3]
+			if count == 0:
+				map[gen_color[0],gen_color[1],gen_color[2],:3] = ref_color
+				map[gen_color[0],gen_color[1],gen_color[2],3] = 1
+			else:
+				map[gen_color[0],gen_color[1],gen_color[2],:3] = (count/(count+1))*map[gen_color[0],gen_color[1],gen_color[2],:3] + (1/(count+1))*ref_color
+				map[gen_color[0],gen_color[1],gen_color[2],3] += 1
+	print(map)
+	return map
+
+
+def apply_map(img_gen,map):
+	rows,cols,channels = img_gen.shape
+	for row in range(rows):
+		for col in range(cols):
+			colors = img_gen[row,col]
+			img_gen[row,col] = map[colors[0],colors[1],colors[2],:3].astype(int)
+	return img_gen
 
 
 def find_keypoints(img):
@@ -77,10 +108,26 @@ def cvt16to8bit(img):
 	return (img//256).astype('uint8')
 
 
+def model(img,vals):
+	g,c,o = vals
+	img_old = img.copy()
+	img = offset(img,o)
+	img = contrast(img,c)
+	img = gain(img,g)
+	img = np.where(img<255,np.where(img>0,img,0),255)
+	return img
+
+
+def fun(x,u,y):
+	z = (y-model(u,x)).flatten()**2
+	#print("z.shape: {}".format(z))
+	return z
+
+
 if __name__ == "__main__":
 	MIN_MATCH_COUNT = 120
-	image_1 = "approx_test/tree_1.jpg" # The generated image
-	image_2 = "approx_test/tree_1_modded.jpg" # The image to match to
+	image_1 = "approx_test/apollo_13_match_2.png" # The generated image
+	image_2 = "approx_test/tsiolkovsky.tiff" # The image to match to
 	img1 = cv.imread(image_1)
 	img2 = cv.imread(image_2)
 	img_info(img1)
@@ -114,10 +161,13 @@ if __name__ == "__main__":
 	#img2 = (img2*256).astype('uint16')
 	cv.imwrite("img1_aligned.png",img1)
 
+	# Darken all the outlying regions of img2
+	img2 = np.where(img1==0,0,img2)
+
 	# Images have been matched, now lets correct!
 	# Lets start by blurring both images
-	#img1 = cv.blur(img1,(5,5))
-	#img2 = cv.blur(img2,(5,5))
+	img1b = cv.blur(img1,(5,5))
+	img2b = cv.blur(img2,(5,5))
 
 	# Get a sense of the baseline error
 	print("Original Score:")
@@ -126,76 +176,24 @@ if __name__ == "__main__":
 
 	# Now to set up the modifications
 	print("Attempting Modifications:")
-	# base_values
-	search_gain = [0.25,0.5,1,1.5,2,3]
-	search_contrast = [0.5,1,1.5,2]
-	search_vignette = [0,2,4]
-	search_vignette_str = [0,1,2]
-	best_values = [1,0,1.0,0.0,0.0]
-	best_image = img1.copy()
-	stable_score = 15
-	num_iterations = 250
-	"""
-	for i in search_gain:
-		for j in search_contrast:
-			for k in search_vignette:
-				for l in search_vignette_str:
-					gain_mult = i
-					contrast_mult = j
-					vignette_level = k
-					vignette_str = l
-					modded_img = img1.copy()
-					modded_img = gain(modded_img,gain_mult)
-					modded_img = contrast(modded_img,contrast_mult)
-					modded_img = vignette(modded_img,vignette_level,vignette_str)
-					new_score = comp_imgs(modded_img,img2)
-					if new_score < best_score:
-						print("\tNew Best Score!: {}".format(new_score))
-						best_score = new_score
-						best_image = modded_img.copy()
-						best_values = [gain_mult,contrast_mult,vignette_level,vignette_str]
-	print("Best values: {}".format(best_values))
-	"""
-	for i in range(num_iterations):
-		modded_img = img1.copy()
-		print("Attempt {:03d}: ".format(i),end="")
-		progress = float(i)/float(num_iterations)
-		if (np.random.uniform(0,1)<progress):
-			print("BEST Guess, Progress {:02d}% ".format(int(progress*100)),end="")
-			gain_mult = best_values[0] + np.random.normal(0,(.1/progress))
-			contrast_mult = best_values[1] + np.random.normal(0,.1/progress)
-			vignette_level = best_values[2] + np.random.normal(0,.1/progress)
-			vignette_str = max(best_values[3] + np.random.normal(0,.1/progress),0)
-		else:
-			print("RAND Guess, Progress {:02d}% ".format(int(progress*100)),end="")
-			if np.random.uniform(0,1)<progress:
-				choice = np.random.choice(4)
-				gain_mult,contrast_mult,vignette_level,vignette_str = best_values
-				if choice == 0:
-					gain_mult = np.random.uniform(0,5)
-				elif choice == 1:
-					contrast_mult = np.random.uniform(0,5)
-				elif choice == 2:
-					vignette_level = np.random.uniform(-5,5)
-				else:
-					vignette_str = np.random.uniform(0,2)
-			else:
-				gain_mult = np.random.uniform(0,5)
-				contrast_mult = np.random.uniform(0,5)
-				vignette_level = np.random.uniform(-5,5)
-				vignette_str = np.random.uniform(0,2)
 
-		modded_img = gain(modded_img,gain_mult)
-		modded_img = contrast(modded_img,contrast_mult)
-		modded_img = vignette(modded_img,vignette_level,vignette_str)
-		new_score = comp_imgs(modded_img,img2)
-		if new_score < best_score:
-			print("\tNew Best Score!: {}".format(new_score))
-			best_score = new_score
-			best_image = modded_img.copy()
-			best_values = [gain_mult,contrast_mult,vignette_level,vignette_str]
-	print("Writing Best Image with Score {} to file...".format(best_score))
-	print("Best Values are: {}".format(best_values))
+	#x0 = np.array([1,1,0])
+	#res = least_squares(fun,x0,args=(img1b,img2b),verbose=1)
+	#print(res.x)
+	#best_values = res.x
+	#best_values = [1.06522339, 0.78893892, 0.]
+	#best_image = model(img1,best_values)
+	#img2 = np.where(img1<5,0,img2)
+	#img1 = img1[500:-500,500:-500]
+	#img2 = img2[500:-500,500:-500]
+	map = build_map(img1,img2)
+	best_image = apply_map(img1,map)
+
+	#cv.imwrite("tsiolkovsky_mod.png",img2)
+
+	#best_image = exposure.match_histograms(img1,img2,channel_axis=-1)
+	
+	#print("Writing Best Image with Score {} to file...".format(best_score))
+	#print("Best Values are: {}".format(best_values))
 	cv.imwrite("best_mod.png",best_image)
-	cv.imwrite("vignette_test.png",vignette(img1,2.5,0.4))
 

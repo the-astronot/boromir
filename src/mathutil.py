@@ -1,6 +1,7 @@
 """
 	All the math functions to make this work...
 """
+import numpy as np
 from numpy import (array,ones,zeros,eye,rad2deg,deg2rad,sin,cos,tan,arcsin,arccos,arctan,arctan2,sqrt,argmax,argmin,cross,dot)
 from numpy.linalg import (svd,det,norm)
 
@@ -33,3 +34,8 @@ def angle_betw_los(vec1,vec2):
 		vec2 = vec2/norm(vec2)
 	angle = arccos(vec1.T@vec2)
 	return float(angle)
+
+
+def rand_norm3():
+	v = np.random.uniform(-1,1,(3,1))
+	return v/norm(v)

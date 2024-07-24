@@ -85,19 +85,19 @@ def get_intersection(pos,los):
 if __name__ == "__main__":
 
 	# Configs
-	n_mesh = 100
+	n_mesh = 10
 	n_sun = 10
 	min_sun_angle = deg2rad(-5)
 	max_csi = pi
 	blend_file = "../blends/mass.blend"
 	albedo_map = "../maps/lroc_color_poles.tif"
-	camera_file = "testcam.json"
-	outdir = "../outimages/batch/"
-	interactive = False # Are you gonna sit there and watch it?
+	camera_file = "trashcam.json"
+	outdir = "../outimages/batch_512/"
+	interactive = True # Are you gonna sit there and watch it?
 	# End configs
 
 	camera = get_camera("../configs/cameras/{}".format(camera_file))
-	for i in range(3,n_mesh):
+	for i in range(n_mesh):
 		filename = "../configs/batch_{}.json".format(i)
 		state, los, offnadir = random_state([MOON_RADIUS+1500000,3*MOON_RADIUS])
 		print("STATE:\nPosition = {}\nAttitude = {}\nLoS = {}\nOffNadir = {}".format(state.position,state.attitude,los,offnadir))

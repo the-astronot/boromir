@@ -118,7 +118,7 @@ def grassy_knoll(camera):
 	return camera
 
 
-def find_mesh(camera):
+def find_mesh(camera,gk=False):
 	"""
 		Use the known camera data to find the verts, triangles, and colors of the mesh
 	"""
@@ -144,6 +144,9 @@ def find_mesh(camera):
 													ct.c_float,
 													(ct.c_float*2),
 													ct.c_char_p]
+	if gk:
+		print("Running Grassy Knoll")
+		camera = grassy_knoll(camera)
 	# Setup data
 	print("Setting Up Data")
 	pos_c = (ct.c_float*3)(*(camera.state.position))
