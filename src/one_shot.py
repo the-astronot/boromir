@@ -36,6 +36,7 @@ def get_state(config):
 		print("ERROR: No states found")
 		return None
 	state_data = states_data[0]
+	quat = Quaternion()
 	if "SC" in state_data:
 		# Boresight aligned with X axis, Z is up
 		sc_data = state_data["SC"]
@@ -44,7 +45,7 @@ def get_state(config):
 			dcm = quatWorldtoCam.toDCM().T@sc_quat.toDCM()
 		elif "DCM" in sc_data:
 			sc_dcm = array(sc_data["DCM"],dtype=np.float32)
-			dcm = quatWorldtoCam.toDCM()@sc_dcm
+			dcm = quatWorldtoCam.toDCM().T@sc_dcm
 		else:
 			print("ERROR: SC has no attitude data")
 			return None
@@ -76,8 +77,8 @@ if __name__ == "__main__":
 	blend_file = "../blends/oneshot.blend"
 	albedo_map = "../maps/lroc_color_poles.tif"
 	config_dir = "../configs"
-	config = "parth2.conf"
-	use_grassyknoll = True
+	config = "parth.conf"
+	use_grassyknoll = False
 	# End configs
 
 	data = load_config(join(config_dir,config))

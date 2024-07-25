@@ -72,7 +72,7 @@ def setup(camera,config):
 	cam.data.angle = camera.FOV_x
 	cam.data.clip_end = np.inf
 	cam.data.sensor_fit = "HORIZONTAL"
-	cam.data.dof.use_dof = True
+	#cam.data.dof.use_dof = True
 	cam.data.dof.focus_distance = norm(camera.state.position)
 	cam.data.dof.aperture_blades = camera.NumBlades
 	cam.data.dof.aperture_fstop = camera.F_Stop
