@@ -126,8 +126,8 @@ def fun(x,u,y):
 
 if __name__ == "__main__":
 	MIN_MATCH_COUNT = 120
-	image_1 = "approx_test/apollo_13_match_2.png" # The generated image
-	image_2 = "approx_test/tsiolkovsky.tiff" # The image to match to
+	image_1 = "approx_test/art1_match_im2_15.png" # The generated image
+	image_2 = "approx_test/parth2_artemis.jpg" # The image to match to
 	img1 = cv.imread(image_1)
 	img2 = cv.imread(image_2)
 	img_info(img1)

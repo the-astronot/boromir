@@ -72,11 +72,10 @@ def setup(camera,config):
 	cam.data.angle = camera.FOV_x
 	cam.data.clip_end = np.inf
 	cam.data.sensor_fit = "HORIZONTAL"
-	#cam.data.dof.use_dof = True
-	cam.data.dof.focus_distance = np.inf
+	cam.data.dof.use_dof = True
+	cam.data.dof.focus_distance = norm(camera.state.position)
 	cam.data.dof.aperture_blades = camera.NumBlades
 	cam.data.dof.aperture_fstop = camera.F_Stop
-	cam.data.clip_end = np.inf
 	scene.render.resolution_x = camera.Ncols
 	scene.render.resolution_y = camera.Nrows
 	scene.view_settings.exposure = -8 # EV, testing
@@ -91,9 +90,10 @@ def setup(camera,config):
 	principled_bsdf.inputs.get("Roughness").default_value = float(config["moon"]["roughness"])
 	principled_bsdf.inputs.get("Metallic").default_value = float(config["moon"]["metallic"])
 	principled_bsdf.inputs.get("IOR").default_value = float(config["moon"]["ior"])
-	principled_bsdf.inputs.get("Coat Weight").default_value = 0
+	principled_bsdf.inputs.get("Coat Weight").default_value = 1.0
 	principled_bsdf.inputs.get("Sheen Weight").default_value = 0
 	principled_bsdf.inputs.get("Emission Strength").default_value = 0
+	principled_bsdf.distribution = "MULTI_GGX" # Added for testing
 	contrast_node = nodes.get("Brightness/Contrast")
 	if contrast_node is None:
 		print("No Contrast Node Found")

@@ -1,10 +1,10 @@
 {
 	"FOV_x": 20,
-	"FOV_y": 16,
+	"FOV_y": 20,
 	"F_Stop": 2.8,
 	"NumBlades": 5,
-	"Nrows": 320,
-	"Ncols": 400,
+	"Nrows": 512,
+	"Ncols": 512,
 	"SubSamples": 1,
-	"OffsetPix": [10,10]
+	"OffsetPix": [20,20]
 }

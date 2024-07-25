@@ -36,7 +36,7 @@ void Convert_LOLA_118(double* ra, double* decl, double* radius, int idx) {
 	fseek(files[idx],read_loc,SEEK_SET);
 	fread(&read_radius,sizeof(short),1,files[idx]);
 
-	*radius = MOON_RADIUS+0.5*(double)read_radius;
+	*radius = MOON_RADIUS+1.0*(double)read_radius;
 }
 
 #endif

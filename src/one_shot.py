@@ -77,13 +77,15 @@ if __name__ == "__main__":
 	albedo_map = "../maps/lroc_color_poles.tif"
 	config_dir = "../configs"
 	config = "parth2.conf"
-	use_grassyknoll = False
+	use_grassyknoll = True
 	# End configs
 
 	data = load_config(join(config_dir,config))
 	if not "CAMERA" in data:
 		print("Camera not found, exiting...")
 		exit()
+	else:
+		print("Camera Loaded!")
 	camera_file = data["CAMERA"]
 	camera = get_camera(join(base_dir,"../configs/cameras",camera_file))
 	state = get_state(data)
