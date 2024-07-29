@@ -90,7 +90,7 @@ def setup(camera,config):
 	principled_bsdf.inputs.get("Roughness").default_value = float(config["moon"]["roughness"])
 	principled_bsdf.inputs.get("Metallic").default_value = float(config["moon"]["metallic"])
 	principled_bsdf.inputs.get("IOR").default_value = float(config["moon"]["ior"])
-	principled_bsdf.inputs.get("Coat Weight").default_value = 1.0
+	principled_bsdf.inputs.get("Coat Weight").default_value = 0
 	principled_bsdf.inputs.get("Sheen Weight").default_value = 0
 	principled_bsdf.inputs.get("Emission Strength").default_value = 0
 	principled_bsdf.distribution = "MULTI_GGX" # Added for testing
