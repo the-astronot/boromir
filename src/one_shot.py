@@ -77,7 +77,7 @@ if __name__ == "__main__":
 	blend_file = "../blends/oneshot.blend"
 	albedo_map = "../maps/lroc_color_poles.tif"
 	config_dir = "../configs"
-	config = "parth.conf"
+	config = "parth3.conf"
 	use_grassyknoll = False
 	# End configs
 

@@ -78,7 +78,9 @@ def setup(camera,config):
 	cam.data.dof.aperture_fstop = camera.F_Stop
 	scene.render.resolution_x = camera.Ncols
 	scene.render.resolution_y = camera.Nrows
-	scene.view_settings.exposure = -8 # EV, testing
+	scene.view_settings.exposure = -np.log2((camera.F_Stop**2)/camera.Exposure_Time)
+	print("Exposure = {}".format(scene.view_settings.exposure))
+	#scene.view_settings.exposure = -8 # EV, testing
 
 	# Config Moon Material
 	if not "MoonRocks" in bpy.data.materials:
@@ -240,7 +242,7 @@ if __name__ == "__main__":
 			# Boresight aligned with Z axis, X is right
 			cam_data = state_data["CAM"]
 			if "QUAT" in cam_data:
-				quat = Quaternion(-float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
+				quat = Quaternion(float(cam_data["QUAT"]["s"]),array(cam_data["QUAT"]["v"]))
 			elif "DCM" in cam_data:
 				dcm = array(cam_data["DCM"],dtype=np.float32)
 				quat.fromDCM(dcm)

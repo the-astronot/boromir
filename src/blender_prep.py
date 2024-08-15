@@ -52,22 +52,23 @@ def grassy_knoll(camera):
 	DCM = camera.state.attitude.toDCM()
 	los = DCM@array([0,0,1])
 	pos = camera.state.position
-	los = los/norm(los)
+	los = (los/norm(los))
 	print(los)
 	TOL = 100000
 	OFFNADIR_THRESH = deg2rad(10)
-	unity_pos = pos/norm(pos)
+	unity_pos = (pos/norm(pos)).reshape(3,)
 	offnadir = arccos(dot(unity_pos,-los))
 	print("NADIR Angle = {}".format(rad2deg(offnadir)))
 	if offnadir < OFFNADIR_THRESH:
 		return camera
 
-	diff = xyzs-pos
+	diff = xyzs-pos.reshape(3,)
+	print(diff.shape)
 	moon_los = diff/norm(diff,axis=2).reshape(ra_sections,decl_sections,1)
 
 	nabla = dot(-moon_los,pos)**2-(norm(pos)**2-RADIUS**2)
 	min_dist = abs(-dot(-moon_los,pos)+sqrt(nabla))
-	angles = np.where(min_dist+TOL>=norm(diff,axis=2),np.dot(moon_los,los),-1)
+	angles = np.where((min_dist+TOL).reshape(360,180)>=norm(diff,axis=2),np.dot(moon_los,los),-1)
 	blob_target = np.where(angles>fov_bounds,norm(diff,axis=2),-1)
 
 	# Finding the center of the blob

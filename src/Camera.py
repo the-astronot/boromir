@@ -10,6 +10,7 @@ class Camera():
 					"Ncols":int,
 					"SubSamples":int,
 					"OffsetPix":array,
+					"Exposure_Time":float
 					}
 	
 	def __init__(self,json=None,state=None):
@@ -28,6 +29,7 @@ class Camera():
 		self.Ncols = 1024
 		self.SubSamples = 1
 		self.OffsetPix = array([20,20])
+		self.Exposure_Time = 1/250
 		self.state = None
 
 	def from_json(self,json):

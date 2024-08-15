@@ -22,7 +22,7 @@ def rand_norm3():
 	return v/norm(v)
 
 
-def random_state(rad_range,lat_range=[-pi/2,pi/2],lon_range=[0,2*pi]):
+def random_state(rad_range,lat_range=[-pi/2,pi/2],lon_range=[0,2*pi],max_offnadir=None):
 	"""
 		Moving fast and breaking things. This code should be heavily revised.
 	"""
@@ -41,7 +41,9 @@ def random_state(rad_range,lat_range=[-pi/2,pi/2],lon_range=[0,2*pi]):
 		found = True
 		print("Found Position!")
 	# Position has been found, now need attitude
-	theta_max = arcsin(MOON_RADIUS/(r))
+	theta_max = arcsin(MOON_RADIUS/(r))/2.0 # Middle of frame halfway to limb
+	if max_offnadir is not None:
+		theta_max = min(max_offnadir,theta_max)
 	print("Theta_Max is: {}".format(theta_max))
 	found = False
 	while not found:
@@ -84,21 +86,32 @@ def get_intersection(pos,los):
 
 if __name__ == "__main__":
 	# Configs
-	n_mesh = 200
+	n_mesh = 10000
 	n_sun = 10
-	min_sun_angle = deg2rad(-5)
+	min_height = MOON_RADIUS+1500000
+	max_height = 2*MOON_RADIUS
+	lat_range = [-pi/2,pi/2] # Default [-pi/2,pi/2]
+	lon_range = [0,2*pi] # Default [0,2*pi]
+	min_sun_angle = deg2rad(5)
+	max_sun_angle = deg2rad(30)
 	max_csi = pi
-	blend_file = "../blends/mass.blend"
+	max_offnadir = None
+	blend_file = "../blends/mass2.blend"
 	albedo_map = "../maps/lroc_color_poles.tif"
 	camera_file = "testcam.json"
-	outdir = "../outimages/batch_2/"
+	outdir = "/home/mtmarsha/comeandtakeit/boromir_images/batch_5"
+	#outdir = "../outimages/batch_4/"
+	gk = True
 	interactive = False # Are you gonna sit there and watch it?
 	# End configs
 
 	camera = get_camera("../configs/cameras/{}".format(camera_file))
 	for i in range(n_mesh):
 		filename = "../configs/batch_{}.json".format(i)
-		state, los, offnadir = random_state([MOON_RADIUS+1500000,3*MOON_RADIUS])
+		state, los, offnadir = random_state([min_height,max_height],
+																				lat_range=lat_range,
+																				lon_range=lon_range,
+																				max_offnadir=max_offnadir)
 		print("STATE:\nPosition = {}\nAttitude = {}\nLoS = {}\nOffNadir = {}".format(state.position,state.attitude,los,offnadir))
 		camera.set_state(state)
 		intersection = get_intersection(state.position.reshape(3),los.reshape(3))
@@ -116,19 +129,21 @@ if __name__ == "__main__":
 			sun_los = rand_norm3()
 			moon_sun_interlock = angle_betw_los(moon2int,sun_los)
 			cam_sun_interlock = angle_betw_los(los,sun_los)
-			if moon_sun_interlock < pi/2+min_sun_angle or cam_sun_interlock > max_csi:
+			if moon_sun_interlock < pi/2+min_sun_angle or \
+				moon_sun_interlock > pi/2+max_sun_angle or \
+				cam_sun_interlock > max_csi:
 				continue
 			print("CAM LoS: {}, SUN LoS: {}, Interlock: {}".format(los.T,sun_los.T,cam_sun_interlock))
 			data = {}
 			data["NAME"] = "image_{}".format(j)
-			data["TIME"] = "The Year 3000"
+			data["TIME"] = "A long time ago in a galaxy far, far away..."
 			data["CAM"] = {}
 			data["CAM"]["POS"] = camera.state.position.reshape(3).tolist()
 			data["CAM"]["LOS"] = los.reshape(3).tolist()
 			data["CAM"]["OFFNADIR"] = offnadir
 			data["CAM"]["QUAT"] = {}
 			data["CAM"]["QUAT"]["s"] = camera.state.attitude.s
-			data["CAM"]["QUAT"]["v"] = camera.state.attitude.v.reshape(3).tolist()
+			data["CAM"]["QUAT"]["v"] = (-1*camera.state.attitude.v.reshape(3)).tolist()
 			data["CAM"]["SUN_INTERLOCK"] = angle_betw_los(los,sun_los)
 			data["SUN"] = sun_los.reshape(3).tolist()
 			render_data["STATES"].append(data)
@@ -137,7 +152,7 @@ if __name__ == "__main__":
 			json.dump(render_data,f,indent=2)
 		if not os.path.exists(render_data["OUTDIR"]):
 			os.makedirs(render_data["OUTDIR"])
-		mesh,tris,colors = find_mesh(camera)
+		mesh,tris,colors = find_mesh(camera,gk=gk)
 		print("Mesh is of size: {}".format(mesh.shape))
 		build_mesh(mesh,tris,colors,albedo_map,blend_file,interactive=interactive)
 		print("Sent to the Renderer")
