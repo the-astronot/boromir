@@ -1,0 +1,61 @@
+#!/bin/bash
+################################################################################
+##                                                                            ##
+##   ####   ###  ####   ###  #   # ##### ####                                 ##
+##   #   # #   # #   # #   # ## ##   #   #   #                                ##
+##   ####  #   # ####  #   # # # #   #   ####                                 ##
+##   #   # #   # #  #  #   # #   #   #   #  #                                 ##
+##   ####   ###  #   #  ###  #   # ##### #   #                                ##
+##                                                                            ##
+################################################################################
+## Blender-based Open-source Repository for Opnav Image Rendering             ##
+################################################################################
+## Author: Max Marshall                                                       ##
+################################################################################
+## This file is a simple BASH script to source the requisite env and run the  ##
+## main Python file.                                                          ##
+################################################################################
+
+################################################################################
+# HARDCODED CONFIGS
+HARD_BASEDIR="" #If required, set this to the absolute path 
+								#to the boromir directory
+#
+################################################################################
+# GLOBAL VARS
+FOUND_BASEDIR=0
+BASEDIR=""
+#
+################################################################################
+
+# Utility Functions
+################################################################################
+function findbasedir {
+	# Try and find the base directory
+	TRYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd && echo x)"
+	TRYDIR="${TRYDIR%x}"
+	if [[ ! -d $TRYDIR ]]; then
+		BASEDIR="$TRYDIR"
+		FOUND_BASEDIR=1
+	else
+		# Could not properly find BASEDIR programmatically
+		# Fall back on HARD_BASEDIR
+		if [[ ! -z "$HARD_BASEDIR" ]]; then
+			if [[ -d "$HARD_BASEDIR" ]]; then
+				BASEDIR="$HARD_BASEDIR"
+				FOUND_BASEDIR=1
+			else
+				echo -e "ERROR: Could not find BASEDIR or \"HARD_BASEDIR\", please correct"
+			fi
+		else
+			echo -e "ERROR: Could not find BASEDIR, please set via \"HARD_BASEDIR\""
+		fi
+	fi
+}
+
+# Main Section
+################################################################################
+findbasedir
+if [[ $FOUND_BASEDIR ]]; then
+	cd $BASEDIR && source .venv/bin/activate && cd src && python3 boromir.py $@
+fi

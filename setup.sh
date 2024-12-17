@@ -1,8 +1,8 @@
 #!/bin/bash
 ################################################################################
-# Performs setup of entire Repo
-#
-# Author: Max Marshall 06/2024
+# Performs setup of entire Repo                                                #
+#                                                                              #
+# Author: Max Marshall 06/2024                                                 #
 ################################################################################
 
 # Download Required DEM/Albedo Files
