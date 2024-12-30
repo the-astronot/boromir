@@ -6,3 +6,4 @@ bpy
 pandas
 scikit-image
 spiceypy
+pytest

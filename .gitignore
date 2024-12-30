@@ -37,4 +37,5 @@ logs/
 configs/
 
 # Spice Files
-spice/
+spicedata/*
+!spicedata/boromir.tm

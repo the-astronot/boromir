@@ -20,6 +20,9 @@ class Quaternion():
 
 	def __str__(self):
 		return "[{:.5f}, {:.5f}, {:.5f}, {:.5f}]".format(self.s,self.v[0],self.v[1],self.v[2])
+	
+	def __repr__(self):
+		return self.__str__()
 
 	def toDCM(self):
 		dcm = zeros((3,3))
@@ -80,7 +83,7 @@ class State():
 	"""
 		Holds onto state information
 	"""
-	position = zeros
+	position = zeros(3)
 	attitude = Quaternion()
 
 	def __init__(self,position=None,attitude=None):
