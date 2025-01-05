@@ -3,14 +3,16 @@
 # Library Imports
 import argparse
 import sys
-from os.path import abspath,dirname,join,isdir
+from os.path import abspath,dirname,join,isdir,basename
 from functools import partial
 import time
 
 # Local Imports
-import file_io as fi
-from Log import Logger
+import file_io as io
+import trajectory_gen as traj_gen
+from Log import LOGGER,log,error
 from error_codes import *
+from paths import *
 
 
 def build_parser():
@@ -23,34 +25,46 @@ def build_parser():
 		description="BOROMIR: The Blender-based Open-source Repository for Opnav\
 									Moon Image Rendering"
 	)
+
 	# Add Common Arguments
+	## VERSION
 	parser.add_argument(
 		"--version",
 		action="version",
 		version="%(prog)s {}".format(VERSION)
 	)
+	## VERBOSE
 	parser.add_argument(
 		"-v",
 		"--verbose",
 		action="store_true",
 		help="toggles output to terminal"
 	)
+	## LOG FILE
+	log_check = partial(io.basename2path,path=LOG_DIR)
 	parser.add_argument(
 		"--logging",
-		type=str,
 		default=None,
-		help="output logging file"
+		help="output logging file",
+		type=partial(log_check)
 	)
+	## BLENDER CONFIG FILE
+	blender_check = partial(io.basename2path,path=BLENDER_CONF_DIR)
 	parser.add_argument(
 		"--blender",
 		help="select Blender config file from configs/",
-		default=join(BLENDER_CONF_DIR,"blender.conf")
+		default=join(BLENDER_CONF_DIR,"blender.conf"),
+		type=partial(blender_check)
 	)
+	## CAMERA CONFIG FILE
+	cam_check = partial(io.basename2path,path=CAMERA_DIR)
 	parser.add_argument(
 		"--camera",
 		help="select camera config file from configs/cameras/",
-		default=join(CAMERA_DIR,"testcam.json")
+		default=join(CAMERA_DIR,"testcam.json"),
+		type=partial(cam_check)
 	)
+	## LOG LEVEL
 	parser.add_argument(
 		"--log_level",
 		help="level of logging from {0..3}->{None..Full}",
@@ -58,6 +72,7 @@ def build_parser():
 		choices=[0,1,2,3],
 		default=0
 	)
+	## FORCE OVERWRITE LOG FILE
 	parser.add_argument(
 		"--fo",
 		"--forceoverwrite",
@@ -85,7 +100,7 @@ def build_traj_parser(parser):
 		help="create images from state data"
 	)
 	# Add Trajectory-Specific Arguments
-	partial_fc = partial(fi.check_for_file,dirname=TRAJECTORY_DIR)
+	partial_fc = partial(io.check_for_file,dirname=TRAJECTORY_DIR)
 	parser_traj.add_argument(
 		"filename",
 		help="file of <type of run> in configs/trajectories/",
@@ -101,7 +116,12 @@ def build_traj_parser(parser):
 		"--outdir",
 		help="directory to store the images to",
 		default=IMG_DIR,
-		type=fi.check_for_dir
+		type=io.check_for_dir
+	)
+	parser_traj.add_argument(
+		"--disable_gkm",
+		help="disables sharing meshes (can increase run-time and artifacts)",
+		action="store_true"
 	)
 
 	return parser
@@ -127,6 +147,12 @@ def build_random_parser(parser):
 		help="Number of random images to generate",
 		type=int
 	)
+	parser_random.add_argument(
+		"--disable_gkm",
+		help="disables sharing meshes (can increase run-time and artifacts)",
+		action="store_true"
+	)
+
 	return parser
 
 
@@ -147,26 +173,34 @@ def build_test_parser(parser):
 
 def process_trajectory(args):
 	# Perform required checks and launch job
-	log("CONFIGURATION",0)
-	log("Job Name: {}".format(args.job),0)
-	log("Job Type: Trajectory",0)
-	log("Input File: {}".format(args.filename),0)
-	log("Output Dir: {}".format(args.outdir),0)
-	log("Camera: {}".format(args.camera),0)
-	log("Blender Config: {}".format(args.blender),0)
-	log("[Log File, Level, Overwrite]: [{}, {}, {}]".format(args.logging,
-																											args.log_level,
-																											args.fo),
-																											0)
+	
+	# Perform file checks
+	args.camera = io.check_for_file(args.camera,CAMERA_DIR)
+	args.blender = io.check_for_file(args.blender,BLENDER_CONF_DIR)
+
+	# Confirm job name/image directory
+	status = io.try_makedir(join(args.outdir,args.job))
+	while status != 0:
+		renamed = (io.ask_overwrite(args.job,args.outdir))
+		if renamed == args.job:
+			status = 0
+			continue
+		status = io.try_makedir(join(dirname(renamed),basename(renamed)))
+		if status == 0:
+			args.job = basename(renamed)
+			args.outdir = abspath(dirname(renamed))
+
+	# Print configs
+	traj_gen.print_config(args)
+
 	# Check input file for errors and create list of poses
-	ret,poses = fi.read_traj_file(args.filename)
+	ret,poses = io.read_traj_file(args.filename)
 	if ret != TrajFileReadError.SUCCESS:
 		error("ERROR {}: Reading Trajectory File, Exiting...".format(ret))
 		return
 	# Run job
-	for pose in poses:
-		log(pose,0)
-
+	traj_gen.run(args,poses)
+	log("Finished run",0)
 	return
 
 
@@ -179,33 +213,20 @@ def process_test(args):
 	# Run tests
 	return
 
-# Supplying the functions with a less clunky logger
-def log(msg,level,also_print=False):
-	LOGGER.log(msg,level,also_print=also_print)
-
-def error(msg):
-	LOGGER.error(msg)
 
 
 # GLOBAL VARS
 VERSION = "1.0.0-alpha"
-BASE_DIR = dirname(dirname(abspath(__file__)))
-CONFIG_DIR = join(BASE_DIR,"configs")
-CAMERA_DIR = join(CONFIG_DIR,"cameras")
-BLENDER_CONF_DIR = join(CONFIG_DIR,"blender")
-TRAJECTORY_DIR = join(CONFIG_DIR,"trajectories")
-RANDOM_POSE_DIR = join(CONFIG_DIR,"random_poses")
-IMG_DIR = join(BASE_DIR,"outimages")
-LOGGER=None
+
 # END GLOBAL VARS
 # BOROMIR Main Function
 if __name__ == "__main__":
 	parser = build_parser()
 	args = parser.parse_args()
-	LOGGER = Logger(args.logging,
-									level=args.log_level,
-									verbose=args.verbose,
-									force_overwrite=args.fo)
+	LOGGER.re_init(args.logging,
+								level=args.log_level,
+								verbose=args.verbose,
+								force_overwrite=args.fo)
 	if args.command == "trajectory":
 		process_trajectory(args)
 	elif args.command == "random":

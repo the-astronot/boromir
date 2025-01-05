@@ -8,7 +8,11 @@
 *.jpg
 *.jpeg
 *.png
-outimages/
+outimages/*
+
+# Maps
+maps/*
+!maps/*.py
 
 # C Stuff
 *.o
@@ -27,7 +31,6 @@ __pycache__
 core*
 
 # Logs
-logs/
 *.log
 
 # VSCode
@@ -39,3 +42,10 @@ configs/
 # Spice Files
 spicedata/*
 !spicedata/boromir.tm
+
+# Keep dirs
+!.exists
+
+# Trash/scratch
+scratch/*
+trash/*

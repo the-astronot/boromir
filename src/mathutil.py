@@ -39,3 +39,13 @@ def angle_betw_los(vec1,vec2):
 def rand_norm3():
 	v = np.random.uniform(-1,1,(3,1))
 	return v/norm(v)
+
+
+def rot_about(a,b,theta):
+	a_par_b = (dot(a,b)/dot(b,b))*b
+	a_perp_b = a - a_par_b
+	w = cross(b,a_perp_b)
+	x1 = cos(theta)/np.linalg.norm(a_perp_b)
+	x2 = sin(theta)/np.linalg.norm(w)
+	a_perp_btheta = np.linalg.norm(a_perp_b)*(x1*a_perp_b+x2*w)
+	return array(a_perp_btheta + a_par_b)

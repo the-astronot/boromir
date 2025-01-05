@@ -1,11 +1,12 @@
 # Library imports
 import os
-from os.path import join,exists,isfile,dirname,isdir
+from os.path import join,exists,abspath,dirname,isdir,basename
 import time
 from enum import IntEnum
 
 # Local imports
-
+from file_io_util import ask_overwrite
+from paths import LOG_DIR
 
 
 class Logger:
@@ -17,11 +18,20 @@ class Logger:
 		self.level = level
 		self.verbose = verbose
 		self.open_file = False
-		if self.filename is not None:
+		if self.filename is not None and self.filename.lower() != "none":
 			if exists(self.filename) and not force_overwrite:
-				self.ask_overwrite()
+				self.filename = ask_overwrite(self.filename,LOG_DIR)
 			self.f = open(self.filename,"w+")
 			self.open_file = True
+
+	def re_init(self,filename,verbose=False,level=0,force_overwrite=False):
+		if self.open_file:
+			self.f.close()
+		self.__init__(filename,
+									verbose=verbose,
+									level=level,
+									force_overwrite=force_overwrite
+									)
 
 	def log(self,msg,level,also_print=False):
 		"""
@@ -48,27 +58,6 @@ class Logger:
 	
 	def error(self,msg):
 		self.log(msg,0,also_print=True)
-		
-	def ask_overwrite(self):
-		"""
-			Check before overwriting 
-		"""
-		confirm_overwrite = False
-		while confirm_overwrite == False:
-			response = input("File: {} already exists. Would you like to overwrite it? (Y/n)".format(self.filename))
-			if not response.lower() in ["","y","ye","yes"]:
-				invalid_filename = True
-				while invalid_filename:
-					new_file = input("Enter alternate filename: ")
-					if isdir(dirname(new_file)):
-						invalid_filename = False
-					else:
-						print("Path does not exist, try again...")
-				self.filename = new_file
-				if not exists(self.filename):
-					confirm_overwrite = True
-			else:
-				confirm_overwrite = True
 
 	def __del__(self):
 		if self.open_file:
@@ -76,9 +65,16 @@ class Logger:
 			self.open_file = False
 			self.error("Closed {}".format(self.filename))
 
-			
+################################################################################
+LOGGER=Logger(None)
 
+def log(msg,level,also_print=False):
+	LOGGER.log(msg,level,also_print=False)
 
+def error(msg):
+	LOGGER.error(msg)
+
+################################################################################
 if __name__ == "__main__":
-	Logger("test.out")
-	Logger.log("Test text",2)
+	LOGGER.re_init("test.out")
+	log("Test text",2)

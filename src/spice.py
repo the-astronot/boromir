@@ -4,9 +4,9 @@ from os.path import join
 import numpy as np
 
 # Local imports
-from boromir import BASE_DIR
-from Structures import Quaternion
-from file_io import quick_cd
+from paths import *
+from Structures import Quaternion,State
+from file_io_util import quick_cd
 
 # Kernel Setup
 KERNEL_DIR=join(BASE_DIR,"spicedata")
@@ -32,14 +32,16 @@ def time2EarthPose(utc_time):
 	pos_m = pos*1000
 	quatE2M = Quaternion()
 	quatE2M.fromDCM(sp.pxform("ITRF93","MOON_ME",etime))
-	return pos_m,quatE2M
+	return State(pos_m,quatE2M)
 
 
 if __name__ == "__main__":
-	dt = "12:00:00 January 1 2025"
+	dt = "16:39:39 December 24 1968"
 	sun_los = time2SunLOS(dt)
 	print("The Sun LOS at {} is: {}".format(dt,sun_los))
-	earth_pos,earth_quat = time2EarthPose(dt)
+	earth_state = time2EarthPose(dt)
+	earth_pos = earth_state.position
+	earth_quat = earth_state.attitude
 	print("The Earth Position in MOON_ME at {} is: {}".format(dt,earth_pos))
 	print("The Earth's Rotation at {} is: [{},{}]".format(dt,earth_quat.s,earth_quat.v))
 	print("The distance from the Earth to the Moon at {} is: {:.1f} km".format(dt,np.linalg.norm(earth_pos)/1000))

@@ -53,10 +53,10 @@ def calculate_K_matrix(sensor_size,
 if __name__ == '__main__':
 	## INPUTS
 	# Sensor Data
-	sensor_size = None #[0.06,0.06] # (meters,meters)
-	num_pixels = [3900,3900] # (unitless,unitless)
+	sensor_size = np.array([0.06,0.06]) # (meters,meters)
+	num_pixels = np.array([1024,1024]) # (unitless,unitless)
 	# FoV Data
-	camera_fov = [12.5,12.5] # (units,units)
+	camera_fov = None #[12.5,12.5] # (units,units)
 	camera_fov_units = "degrees"
 	# Lens Data
 	focal_length = .250 # meters
@@ -68,3 +68,4 @@ if __name__ == '__main__':
 
 	K = calculate_K_matrix(sensor_size,num_pixels,camera_fov,focal_length)
 	print("BEHOLD, THE K MATRIX:\n{}".format(K))
+	print("FOV is: {}".format(np.rad2deg(calc_AFOV(sensor_size,focal_length))))

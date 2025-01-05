@@ -77,6 +77,13 @@ class Quaternion():
 
 	def toArray(self):
 		return array([self.s,self.v[0],self.v[1],self.v[2]])
+	
+
+# Common Quaternions
+#quatWorldtoCam = Quaternion()
+#quatWorldtoCam.fromDCM(array([[0,0,1],
+#															[-1,0,0],
+#															[0,-1,0]]))
 
 
 class State():

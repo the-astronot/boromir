@@ -1,5 +1,10 @@
+# Library imports
 from numpy import deg2rad,array
 import json
+
+# Local imports
+from Log import log,error
+
 
 class Camera():
 	types = {"FOV_x":deg2rad,
@@ -10,7 +15,8 @@ class Camera():
 					"Ncols":int,
 					"SubSamples":int,
 					"OffsetPix":array,
-					"Exposure_Time":float
+					"Exposure_Time":float,
+					"iso":float
 					}
 	
 	def __init__(self,json=None,state=None):
@@ -23,6 +29,7 @@ class Camera():
 	def default_init(self):
 		self.FOV_x = 10.0
 		self.FOV_y = 10.0
+		self.iso = 100
 		self.F_Stop = 2.8
 		self.NumBlades = 5
 		self.Nrows = 1024
@@ -51,11 +58,11 @@ class Camera():
 		pix_ratio = self.Ncols/self.Nrows
 		fov_ratio = self.FOV_x/self.FOV_y
 		if pix_ratio != fov_ratio:
-			print("WARNING: FOV and Pixel Ratios Don't Match")
+			error("WARNING: FOV and Pixel Ratios Don't Match")
 			self.FOV_y = self.FOV_x/pix_ratio
-			print("         FOV_y Set to {}".format(self.FOV_y))
+			error("         FOV_y Set to {}".format(self.FOV_y))
 		if self.FOV_x < 0 or self.FOV_y < 0:
-			print("ERROR: Camera FOV(s) are negative")
+			error("ERROR: Camera FOV(s) are negative")
 			return 1
 		return 0
 

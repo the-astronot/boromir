@@ -5,8 +5,14 @@
 # Author: Max Marshall 06/2024                                                 #
 ################################################################################
 
+# Download NAIF Spice Kernels
+setup/kernel_downloader.sh
+
 # Download Required DEM/Albedo Files
-#./dem_download.sh
+setup/dem_download.sh
+
+# Build C++ Files
+src/cpp/buildmesh.sh
 
 # Create Virtual Environment
 if [[ ! -e ".venv" ]]; then

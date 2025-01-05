@@ -4,49 +4,52 @@ import numpy as np
 # Local imports
 from error_codes import *
 from spice import time2SunLOS, time2EarthPose
-from Structures import Quaternion
+from Structures import Quaternion,State
 
 
 class Pose:
 	"""
 		The pose class contains all the data related to the position and rotation of the requisite bodies.
 	"""
-	def __init__(self,name,sc_pos,sc_quat,time=None,sun_los=None,earth_pos=None,earth_quat=None):
+	def __init__(self,name,cam_state,time=None,sun_los=None,earth_state=None):
 		self.name = name
 		self.complete = False
-		self.sc_pos = sc_pos
-		self.sc_quat = sc_quat
+		self.cam_state = cam_state
 		self.time = time
 		self.sun_los = sun_los
-		self.earth_pos = earth_pos
-		self.earth_quat = earth_quat
+		self.earth_state = earth_state
 		self.render_earth = False
 		# Make sure that either a time is specified or a sun position is
 		if time is None and sun_los is None:
-			pass
+			return
 		elif time is not None:
 			self.sun_los = np.array(time2SunLOS(time))
-			self.earth_pos,self.earth_quat = time2EarthPose(time)
-			self.complete = True
+			self.earth_state = time2EarthPose(time)
+			self.render_earth = True
 		else:
-			pass
+			if self.earth_state is not None:
+				self.render_earth = True
+			else:
+				self.earth_state = State()
+		self.complete = True
+		return
 
 	def __str__(self):
 		comp = ["Inc","C"]
 		return "POSE: {} -- {}omplete\
-						\nSC_Pos = {} (m)\
-						\nSC_Quat = {}\
+						\nCam_Pos = {} (m)\
+						\nCam_Quat = {}\
 						\nTime = {}\
 						\nSun_LOS = {}\
 						\nEarth_Pos = {} (m)\
 						\nEarth_Quat = {}".format(self.name,
 																		comp[self.complete],
-																		self.sc_pos,
-																		self.sc_quat,
+																		self.cam_state.position,
+																		self.cam_state.attitude,
 																		self.time,
 																		self.sun_los,
-																		self.earth_pos,
-																		self.earth_quat)
+																		self.earth_state.position,
+																		self.earth_state.attitude)
 
 	def __repr__(self):
 		return self.__str__()

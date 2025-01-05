@@ -6,7 +6,7 @@ naif0012.tls                         Generic LSK File
 de440.bsp                            Solar System Ephemeris
 moon_pa_de440_200625.bpc             Moon Ephemeris Data
 moon_de440_220930.tf                 Data for IAU_MOON Ref Frame
-earth_1962_240827_2124_combined.bpc  Data for IAU_EARTH Ref Frame
+earth_1962_240827_2124_combined.bpc  Data for ITRF93 Ref Frame
 
 \begindata
 KERNELS_TO_LOAD = ( 'naif0012.tls',
