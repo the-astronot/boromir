@@ -49,3 +49,6 @@ spicedata/*
 # Trash/scratch
 scratch/*
 trash/*
+
+# Docs/Gallery
+!docs/**

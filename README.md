@@ -8,6 +8,18 @@ The Blender-based Open-source Repository for Opnav Moon Image Rendering (BOROMIR
 
 BOROMIR utilizes digital elevation maps (DEMs) and albedo maps of the Moon to generate meshes and create simulated images from a camera state and time (Sun position).
 
+## Gallery
+
+### Standalone Renders
+
+
+### Comparisons
+
+| Real Image | BOROMIR Generated Image |
+| ---------- | ----------------------- |
+| ![](docs/gallery/AS08-14-2383_resized.jpg) | ![](docs/gallery/earth_rise.png) |
+|  |  |
+
 ## Installation
 
 ### Pre-requisites
