@@ -1,4 +1,4 @@
-# Global imports
+# Library imports
 import numpy as np
 
 # Local imports

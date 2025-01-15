@@ -1,9 +1,13 @@
 """
 	All the math functions to make this work...
 """
+# Library imports
 import numpy as np
 from numpy import (array,ones,zeros,eye,rad2deg,deg2rad,sin,cos,tan,arcsin,arccos,arctan,arctan2,sqrt,argmax,argmin,cross,dot)
 from numpy.linalg import (svd,det,norm)
+
+# Local imports
+
 
 
 def wahbas_problem(ref_los, body_los):

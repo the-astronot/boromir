@@ -1,8 +1,10 @@
-"""
-	Class Structures
-"""
+# Library imports
 import numpy as np
 from mathutil import *
+
+# Local imports
+
+
 
 class Quaternion():
 	"""

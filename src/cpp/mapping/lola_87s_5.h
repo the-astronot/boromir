@@ -10,7 +10,7 @@ extern FILE* files[];
 
 // Is Point in Map?
 int PointIn_LOLA_87S_5(double ra, double decl) {
-  // LOLA 87S contains all points under slightly below 87S (don't ask)
+  // LOLA 87S contains all points under slightly below 87S
   if (decl <= -1.519658) {
     return TRUE;
   }

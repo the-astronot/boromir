@@ -10,7 +10,7 @@ import numpy as np
 from error_codes import *
 from Structures import Quaternion,State
 from Pose import Pose
-from Log import log,error
+from Log import critical,warning,info,debug
 from file_io_util import *
 
 
@@ -20,7 +20,7 @@ def check_for_file(filename,dirname):
 		return filename
 	if exists(join(dirname,filename)) and isfile(join(dirname,filename)):
 		return join(dirname,filename)
-	error("ERROR: File {} Not Found".format(filename))
+	critical("ERROR: File {} Not Found".format(filename))
 	exit()
 
 
@@ -28,7 +28,7 @@ def check_for_file(filename,dirname):
 def check_for_dir(dirname):
 	if exists(dirname) and isdir(dirname):
 		return dirname
-	error("ERROR: Directory {} Not Found".format(dirname))
+	critical("ERROR: Directory {} Not Found".format(dirname))
 	exit()
 
 
@@ -57,14 +57,20 @@ def read_traj_file(filename):
 		Reads the ${filename}$ csv file and parses poses
 	"""
 	poses = []
+
 	# Check if file exists
 	if not (exists(filename) and isfile(filename)):
 		return TrajFileReadError.FILENOTFOUND
+	
 	# Read the data
 	text = ""
 	with open(filename,"r") as f:
 		text = f.read().strip("\n")
+
+	# Split data by line
 	entries = text.split("\n")
+
+	# Process each entry for requisite data
 	for i,entry in enumerate(entries):
 		if i == 0: # File header
 			continue
@@ -78,32 +84,37 @@ def read_traj_file(filename):
 		time = None
 		sun_los = None
 		earth_state = None
+
 		# Check if time exists
 		if len(data[8]) > 0:
 			time = data[8].strip("\"").strip("\'")
+
 		# Check if sun los exists
 		if len(data) > 11:
 			if len(data[9])>0 and len(data[10])>0 and len(data[11])>0:
 				sun_los = np.array(data[9:12],dtype=float)
+
 		# Check if Earth pos exists
 		if len(data) > 18:
 			earth_pos = None
 			earth_quat = None
 			if len(data[12])>0 and len(data[13])>0 and len(data[14])>0:
 				earth_pos = np.array(data[12:15],dtype=float)
+
 		# Check if Earth quat exists
 			if len(data[15])>0 and len(data[16])>0 and len(data[17])>0 and len(data[18])>0:
 				earth_quat = Quaternion(data[15],np.array(data[16:19],dtype=float))
 			if earth_pos is not None and earth_quat is not None:
 				earth_state = State(position=earth_pos,attitude=earth_quat)
+
 		# Create pose
 		pose = Pose(name,cam_state,time=time,sun_los=sun_los,earth_state=earth_state)
-		log(pose,3)
+		debug(pose)
 		if not pose.complete:
-			error("Incomplete Pose on entry {}".format(i))
+			critical("Incomplete Pose on entry {}".format(i))
 			return TrajFileReadError.INCOMPLETEPOSE, poses
 		poses.append(pose)
-	log("Completed Pose Reading",0,also_print=True)
+	info("Completed Pose Reading")
 	return TrajFileReadError.SUCCESS, poses
 
 
@@ -116,7 +127,7 @@ def read_rand_file(filename):
 def load_config(filename,old_config=None):
 	new_config = {}
 	if not exists(filename):
-		error("Config: {} Not Found...".format(filename))
+		warning("Config: {} Not Found...".format(filename))
 	with open(filename,"r") as f:
 		new_config = json.load(f)
 	if old_config is not None:

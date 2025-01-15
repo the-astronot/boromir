@@ -78,7 +78,7 @@ int findPoints(float position[3],
 	//std::cout << "Writing to Files" << std::endl;
 	//write_to_files(mesh,colors,meshsize,dirname);
 
-	std::cout << "Matching" << std::endl;
+	//std::cout << "Matching" << std::endl;
 	create_tris(mesh,colors,tris,meshsize,count);
 
 	return 0;

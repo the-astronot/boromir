@@ -10,7 +10,7 @@ import time
 # Local Imports
 import file_io as io
 import trajectory_gen as traj_gen
-from Log import LOGGER,log,error
+from Log import LOGGER,critical,warning,info,debug
 from error_codes import *
 from paths import *
 
@@ -67,10 +67,10 @@ def build_parser():
 	## LOG LEVEL
 	parser.add_argument(
 		"--log_level",
-		help="level of logging from {0..3}->{None..Full}",
+		help="level of logging from {0..3}->{Critical,Warning,Info,Debug}",
 		type=int,
 		choices=[0,1,2,3],
-		default=0
+		default=2
 	)
 	## FORCE OVERWRITE LOG FILE
 	parser.add_argument(
@@ -177,6 +177,8 @@ def process_trajectory(args):
 	# Perform file checks
 	args.camera = io.check_for_file(args.camera,CAMERA_DIR)
 	args.blender = io.check_for_file(args.blender,BLENDER_CONF_DIR)
+	if args.job is None: # If not supplied, job name is filename w/o ext
+		args.job = basename(args.filename).rsplit(".")[0]
 
 	# Confirm job name/image directory
 	status = io.try_makedir(join(args.outdir,args.job))
@@ -196,12 +198,16 @@ def process_trajectory(args):
 	# Check input file for errors and create list of poses
 	ret,poses = io.read_traj_file(args.filename)
 	if ret != TrajFileReadError.SUCCESS:
-		error("ERROR {}: Reading Trajectory File, Exiting...".format(ret))
+		critical("ERROR {}: Reading Trajectory File, Exiting...".format(ret))
 		return
+	
 	# Run job
-	traj_gen.run(args,poses)
-	log("Finished run",0)
-	return
+	status = traj_gen.run(args,poses)
+	if status != 0:
+		critical("trajectory_gen.run returned error code {}".format(status))
+	else:
+		info("Finished run")
+	return status
 
 
 def process_random(args):

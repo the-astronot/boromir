@@ -3,7 +3,7 @@ from numpy import deg2rad,array
 import json
 
 # Local imports
-from Log import log,error
+from Log import critical,warning,info,debug
 
 
 class Camera():
@@ -58,11 +58,10 @@ class Camera():
 		pix_ratio = self.Ncols/self.Nrows
 		fov_ratio = self.FOV_x/self.FOV_y
 		if pix_ratio != fov_ratio:
-			error("WARNING: FOV and Pixel Ratios Don't Match")
 			self.FOV_y = self.FOV_x/pix_ratio
-			error("         FOV_y Set to {}".format(self.FOV_y))
+			warning("FOV and Pixel Ratios Don't Match\n\tFOV_y Set to {}".format(self.FOV_y))
 		if self.FOV_x < 0 or self.FOV_y < 0:
-			error("ERROR: Camera FOV(s) are negative")
+			critical("Camera FOV(s) are negative")
 			return 1
 		return 0
 

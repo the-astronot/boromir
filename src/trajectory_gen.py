@@ -6,7 +6,7 @@ from os.path import join,exists,isfile
 import subprocess as sp
 
 # Local Imports
-from Log import log,error
+from Log import critical,warning,info,debug
 from Camera import get_camera
 from Render import Render
 import file_io as io
@@ -19,18 +19,17 @@ from gkmethod import gkmethod
 
 
 def print_config(args):
-	log("CONFIGURATION",0)
-	log("Job Name: {}".format(args.job),0)
-	log("Job Type: Trajectory",0)
-	log("Input File: {}".format(args.filename),0)
-	log("Output Dir: {}".format(args.outdir),0)
-	log("Camera: {}".format(args.camera),0)
-	log("Blender Config: {}".format(args.blender),0)
-	log("GKM {}abled".format(["En","Dis"][args.disable_gkm]),0)
-	log("[Log File, Level, Overwrite]: [{}, {}, {}]".format(args.logging,
+	info("CONFIGURATION")
+	info("Job Name: {}".format(args.job))
+	info("Job Type: Trajectory")
+	info("Input File: {}".format(args.filename))
+	info("Output Dir: {}".format(args.outdir))
+	info("Camera: {}".format(args.camera))
+	info("Blender Config: {}".format(args.blender))
+	info("GKM {}abled".format(["En","Dis"][args.disable_gkm]))
+	info("[Log File, Level, Overwrite]: [{}, {}, {}]".format(args.logging,
 																													args.log_level,
-																													args.fo),
-																													0)
+																													args.fo))
 	return
 
 
@@ -44,44 +43,58 @@ def run(args,poses):
 	IMG_LOC = join(args.outdir,args.job)
 	BLEND_FILE = "{}.blend".format(join(TMP_DIR,args.job))
 	ALLOW_GK = not args.disable_gkm
-	error("ImgLoc is {}".format(IMG_LOC))
 
 	# Create Camera
 	camera = get_camera(CAMERA_CONF_FILE)
-	error("Loaded Camera")
 
 	# Load blender configs
 	configs = io.load_config(BLENDER_CONF_FILE)
 	configs["outdir"] = IMG_LOC
-	if "albedo_map" not in configs:
-		error("\"albedo_map\" not in Blender config file, exiting...")
+	if "albedo_map" not in configs["moon"]:
+		critical("\"moon/albedo_map\" not in Blender config file, exiting...")
 		return 1
-	ALBEDO_MAP = join(MAP_DIR,configs["albedo_map"])
-	if not (exists(ALBEDO_MAP) and isfile(ALBEDO_MAP)):
-		error("File albedo_map: {} not found, exiting...".format(ALBEDO_MAP))
+	if "albedo_map" not in configs["earth"]:
+		critical("\"earth/albedo_map\" not in Blender config file, exiting...")
+		return 1
+	MOON_ALBEDO_MAP = join(MAP_DIR,configs["moon"]["albedo_map"])
+	if not (exists(MOON_ALBEDO_MAP) and isfile(MOON_ALBEDO_MAP)):
+		critical("Moon albedo_map: {} not found, exiting...".format(MOON_ALBEDO_MAP))
+		return 3
+	EARTH_ALBEDO_MAP = join(MAP_DIR,configs["earth"]["albedo_map"])
+	if not (exists(EARTH_ALBEDO_MAP) and isfile(EARTH_ALBEDO_MAP)):
+		critical("Earth albedo_map: {} not found, exiting...".format(EARTH_ALBEDO_MAP))
+		return 4
 
 	# Create Render Objects
 	renders = create_render_objs(poses,camera,configs,ALLOW_GK)
-	error("Renders created")
 
 	for i,render in enumerate(renders):
 		# Pickle the render objects
 		pickle_file = join(IMG_LOC,"{:05d}.pkl".format(i))
-		#if exists(IMG_LOC) and render.configs["re_render"] == 0:
-		#	log("{} already exists, skipping...".format(IMG_LOC),0)
-		#	continue
+		
+		# Pass data to blender code via pickle file
 		with open(pickle_file,"wb+") as f:
 			pickle.dump(render,f,protocol=pickle.HIGHEST_PROTOCOL)
+
 		# Set the camera to render the mesh
 		camera.set_state(render.mesh_state)
+
 		# Find and build the mesh
 		mesh,tris,colors = find_mesh(camera)
-		build_mesh(mesh,tris,colors,ALBEDO_MAP,BLEND_FILE)
+		build_mesh(mesh,tris,colors,BLEND_FILE)
+
 		# Get Blender to render the scene
-		log("Sent Render {}/{} to be rendered".format(i,len(renders)),2)
-		sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),pickle_file])
-		os.remove(pickle_file)
-		os.remove(BLEND_FILE)
+		info("Sent Render {}/{} to be rendered".format(i,len(renders)))
+		complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),pickle_file],capture_output=False,stdout=sp.DEVNULL)
+
+		# Check for success
+		if complete_proc.returncode != 0:
+			critical("Render #{} failed with error code {}\n\tPickle and Blender files have been left for inspection".format(i,complete_proc.returncode))
+			return 3
+		else:
+			info("Render #{} Completed".format(i))
+			os.remove(pickle_file)
+			os.remove(BLEND_FILE)
 	return 0
 
 

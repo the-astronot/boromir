@@ -19,6 +19,7 @@ sys.path.append(SRC_DIR)
 # Local imports
 from paths import *
 from Structures import Quaternion,State
+from metadata import create_metadata
 
 
 # Render object
@@ -237,7 +238,7 @@ def setup_Earth(config):
 
 	# Add an image texture to the material and connect it to the Base Color of the Principled BSDF
 	if os.path.exists(EARTH_ALBEDO_MAP):
-		print("Found moon albedo file!")
+		print("Found earth albedo file!")
 		image = bpy.data.images.load(EARTH_ALBEDO_MAP)
 		texture_node = nodes.new(type="ShaderNodeTexImage")
 		texture_node.image = image
@@ -247,7 +248,7 @@ def setup_Earth(config):
 		links.new(texture_node.outputs["Color"], contrast_node.inputs["Color"])
 		links.new(contrast_node.outputs["Color"], principled_bsdf.inputs["Base Color"])
 	else:
-		print("Could not find moon albedo file. Something is wrong.")
+		print("Could not find earth albedo file. Something is wrong.")
 		return 1
 	return 0
 
@@ -292,15 +293,17 @@ def moveSun(obj, sun_los):
 
 # Global vars
 isRendering = False
-#MOON_ALBEDO_MAP = join(MAP_DIR,"lroc_color_poles.tif")
-MOON_ALBEDO_MAP = join(MAP_DIR,"moon_mosaic.png")
-EARTH_ALBEDO_MAP = join(MAP_DIR,"land_ocean_ice_cloud_2048.tif")
+#MOON_ALBEDO_MAP = join(MAP_DIR,"lroc_color_poles.tif")#Trying replacement below
+MOON_ALBEDO_MAP = None #join(MAP_DIR,"moon_mosaic.png")
+EARTH_ALBEDO_MAP = None #join(MAP_DIR,"land_ocean_ice_cloud_8192.tif")
 STARS_MAP = join(MAP_DIR,"hipp8.tif")
 
 
 if __name__ == "__main__":
 	pickle_file = sys.argv[-1]
 	render_obj = None
+	
+	# Read the data from the pickle file
 	try:
 		with open(pickle_file,"rb") as f:
 			render_obj = pickle.load(f)
@@ -308,13 +311,23 @@ if __name__ == "__main__":
 		exit(2)
 	except Exception:
 		pass
+
 	if render_obj is None:
 		print("Render pickle not found, exiting...")
 		exit(1)
+
+	# Get Albedo Maps
+	MOON_ALBEDO_MAP = join(MAP_DIR,render_obj.configs["moon"]["albedo_map"])
+	EARTH_ALBEDO_MAP= join(MAP_DIR,render_obj.configs["earth"]["albedo_map"])
+	
+	# Create scene
 	scene = setup(render_obj.camera,render_obj.configs)
+
+	# Render each image
 	for i in range(len(render_obj.poses)):
-		print(render_obj.poses[i].name)
+		#print(render_obj.poses[i].name)
 		status = render(render_obj,i,scene)
+		create_metadata(render_obj,i)
 		while isRendering is True:
 			time.sleep(0.1)
-	
+	exit(0)

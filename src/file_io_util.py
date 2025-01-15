@@ -4,10 +4,10 @@ import os
 from os.path import exists,join,abspath,dirname,basename,isdir,isfile
 
 # FILE_IO Operations that do not require logging
+# Separated to avoid circular import
 
 ################################################################################
 # CONTEXT MANAGER, for performing required actions at file locations
-# These are required to be here so as to avoid a circular import
 @contextlib.contextmanager
 def quick_cd(path):
 	"""

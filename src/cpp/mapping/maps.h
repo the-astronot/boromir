@@ -9,7 +9,7 @@ typedef void(*convert)(double*,double*,double*,int);
 ////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE BIT WHERE YOU ADD MORE MAPS
 //// EACH SECTION HERE WILL HAVE TO BE MODIFIED
-//// ORDER MATTERS, GO FROM HIGHEST RESOLUTION TO LOWEST
+//// ORDER MATTERS, GO FROM HIGHEST PRIORITY/RESOLUTION TO LOWEST
 //// MAINTAIN ORDER THROUGHOUT SECTION
 ////////////////////////////////////////////////////////////////////////////////
 // Include all map files

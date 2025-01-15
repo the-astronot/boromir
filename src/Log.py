@@ -9,6 +9,13 @@ from file_io_util import ask_overwrite
 from paths import LOG_DIR
 
 
+class Log_Levels():
+	CRITICAL = 0
+	WARNING = 1
+	INFORMATION = 2
+	DEBUG = 3
+
+
 class Logger:
 	"""
 	
@@ -21,7 +28,7 @@ class Logger:
 		if self.filename is not None and self.filename.lower() != "none":
 			if exists(self.filename) and not force_overwrite:
 				self.filename = ask_overwrite(self.filename,LOG_DIR)
-			self.f = open(self.filename,"w+")
+			self.f = open(self.filename,"w+",buffering=1) # Buffer by line
 			self.open_file = True
 
 	def re_init(self,filename,verbose=False,level=0,force_overwrite=False):
@@ -42,7 +49,8 @@ class Logger:
 				- Finally if ${verbose}$ and level 0, log to terminal
 		"""
 		clock = time.strftime("[%H:%M:%S]",time.localtime())
-		msg = "{} {}".format(clock,msg)
+		levels = ["ERROR: ","WARNING: ","INFO: ","DEBUG: "]
+		msg = "{} {}{}".format(clock,levels[level],msg)
 		if level <= self.level:
 			if self.open_file:
 				self.f.write("{}\n".format(msg))
@@ -67,12 +75,27 @@ class Logger:
 
 ################################################################################
 LOGGER=Logger(None)
+LOG_LEVEL=Log_Levels()
 
+# Versatile Logging functions
 def log(msg,level,also_print=False):
-	LOGGER.log(msg,level,also_print=False)
+	LOGGER.log(msg,level,also_print=also_print)
 
 def error(msg):
 	LOGGER.error(msg)
+
+# By log level, easier to reference
+def critical(msg):
+	LOGGER.log(msg,level=LOG_LEVEL.CRITICAL,also_print=True)
+
+def warning(msg):
+	LOGGER.log(msg,level=LOG_LEVEL.WARNING,also_print=True)
+
+def info(msg):
+	LOGGER.log(msg,level=LOG_LEVEL.INFORMATION,also_print=False)
+
+def debug(msg):
+	LOGGER.log(msg,level=LOG_LEVEL.DEBUG,also_print=False)
 
 ################################################################################
 if __name__ == "__main__":

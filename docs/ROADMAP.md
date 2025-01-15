@@ -9,8 +9,9 @@
 5. Add downloader for SPICE data X
 6. Finish Readme instructions
 7. Update metadata
+8. 
 
 ## Nice to haves
 
-1. Add Earth/shine
+1. Add Earth/shine X
 2. Add tests of relevant bits

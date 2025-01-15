@@ -1,7 +1,11 @@
+# Library imports
 import json
 import sys
 import os
 from os.path import join,basename,relpath
+
+# Local imports
+
 
 
 def get_data(_to,_to_name,_from,_from_name):
@@ -32,42 +36,72 @@ def camera2config(camera,old_config=None):
 	return config
 
 
-def create_metadata(config,state_idx):
+def create_metadata(render,idx):
 	# Spitting out all of the metadata into a file
-	state_data = config["STATES"][state_idx]
-	filename = state_data["NAME"]
-	md_file = filename.split(".")[0]+".json"
+	#state_data = config["STATES"][state_idx]
+	config = render.configs
+	pose = render.poses[idx]
+	meta_file = join(config["outdir"],"{}.json".format(pose.name))
 	data = {}
 	## World Data
-	data = get_data(data,"Time (s)",state_data,"TIME")
+	if pose.time is None:
+		data["Time (s)"] = "N/A"
+	else:
+		data["Time (s)"] = pose.time
+	#data = get_data(data,"Time (s)",state_data,"TIME")
 	# Sun
-	data = get_data(data,"SUN LoS",state_data,"SUN")
+	data["Sun LoS"] = pose.sun_los.tolist()
+	#data = get_data(data,"SUN LoS",state_data,"SUN")
 	# Earth
-	data = get_data(data,"Earth Pos (m)",state_data,"EARTH/POS")
-	data = get_data(data,"Earth Quat (s)",state_data,"EARTH/QUAT/s")
-	data = get_data(data,"Earth Quat (v)",state_data,"EARTH/QUAT/v")
+	if pose.render_earth:
+		data["Earth Pos (m)"] = pose.earth_state.position.tolist()
+		data["Earth Quat (s)"] = pose.earth_state.attitude.s
+		data["Earth Quat (v)"] = pose.earth_state.attitude.v.tolist()
+	#data = get_data(data,"Earth Pos (m)",state_data,"EARTH/POS")
+	#data = get_data(data,"Earth Quat (s)",state_data,"EARTH/QUAT/s")
+	#data = get_data(data,"Earth Quat (v)",state_data,"EARTH/QUAT/v")
 	## SC/CAM 6-DOF
-	data = get_data(data,"SC Pos (m)",state_data,"SC/POS")
-	data = get_data(data,"SC Quat (s)",state_data,"SC/QUAT/s")
-	data = get_data(data,"SC Quat (v)",state_data,"SC/QUAT/v")
-	data = get_data(data,"SC LoS",state_data,"SC/LOS")
-	data = get_data(data,"Cam Pos (m)",state_data,"CAM/POS")
-	data = get_data(data,"Cam Quat (s)",state_data,"CAM/QUAT/s")
-	data = get_data(data,"Cam Quat (v)",state_data,"CAM/QUAT/v")
-	data = get_data(data,"Cam LoS",state_data,"CAM/LOS")
+	data["Cam Pos (m)"] = pose.cam_state.position.tolist()
+	data["Cam Quat (s)"] = pose.cam_state.attitude.s
+	data["Cam Quat (v)"] = pose.cam_state.attitude.v.tolist()
+	#data = get_data(data,"SC Pos (m)",state_data,"SC/POS")
+	#data = get_data(data,"SC Quat (s)",state_data,"SC/QUAT/s")
+	#data = get_data(data,"SC Quat (v)",state_data,"SC/QUAT/v")
+	#data = get_data(data,"SC LoS",state_data,"SC/LOS")
+	#data = get_data(data,"Cam Pos (m)",state_data,"CAM/POS")
+	#data = get_data(data,"Cam Quat (s)",state_data,"CAM/QUAT/s")
+	#data = get_data(data,"Cam Quat (v)",state_data,"CAM/QUAT/v")
+	#data = get_data(data,"Cam LoS",state_data,"CAM/LOS")
 	## Camera Settings
 	data = get_data(data,"FOV X (rad)",config,"FOV_x")
 	data = get_data(data,"FOV Y (rad)",config,"FOV_y")
+	data = get_data(data,"F_Stop",config,"F_Stop")
+	data = get_data(data,"Num_Blades",config,"NumBlades")
 	data = get_data(data,"Nrows",config,"Nrows")
 	data = get_data(data,"Ncols",config,"Ncols")
+	data = get_data(data,"Subsamples",config,"SubSamples")
+	data = get_data(data,"Offset (pix)",config,"OffsetPix")
+	data = get_data(data,"Exposure_Time",config,"Exposure_Time")
+	data = get_data(data,"ISO",config,"iso")
+	## Blender Settings
+	data = get_data(data,"Render Samples",config,"Samples")
+	data = get_data(data,"Light_Bounces",config,"Bounces")
+	data = get_data(data,"Denoise",config,"Denoise")
+	data = get_data(data,"Bit_Depth",config,"color_depth")
+	data = get_data(data,"Color_Mode",config,"color_mode")
+	data = get_data(data,"Moon_Albedo_File",config,"moon/albedo_map")
+	data = get_data(data,"Earth_Albedo_File",config,"earth/albedo_map")
 	## Render Settings
-
-	with open(join(config["OUTDIR"],md_file),"w+") as f:
+	with open(meta_file,"w+") as f:
 		json.dump(data,f,indent=2)
 	return
 
 
 def group_to_tsv(filepath,outfile="all_data.tsv",delimiter="\t"):
+	"""
+		This function was hastily written to combine metadata files
+		into a single (c/t)sv file (Needs rewrite)
+	"""
 	all_keys = {"filename":1}
 	all_data = []
 	all_jsons = []

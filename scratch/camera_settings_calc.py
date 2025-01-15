@@ -54,12 +54,12 @@ if __name__ == '__main__':
 	## INPUTS
 	# Sensor Data
 	sensor_size = np.array([0.06,0.06]) # (meters,meters)
-	num_pixels = np.array([1024,1024]) # (unitless,unitless)
+	num_pixels = np.array([4163,4125]) # (unitless,unitless)
 	# FoV Data
 	camera_fov = None #[12.5,12.5] # (units,units)
 	camera_fov_units = "degrees"
 	# Lens Data
-	focal_length = .250 # meters
+	focal_length = .80 # meters
 
 	## PRE-PROCESSING
 	# Convert degrees to radians

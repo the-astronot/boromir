@@ -5,7 +5,7 @@ import numpy as np
 
 # Local imports
 from paths import CPP_DIR
-from Log import log,error
+from Log import critical,warning,info,debug
 
 
 # Declare CTypes function
@@ -36,7 +36,7 @@ def find_mesh(camera):
 										  	camera.SubSamples*(2*camera.OffsetPix[1]+camera.Nrows),
 										  	2))
 	# Setup data
-	log("Setting Up Data",1)
+	info("find_mesh: Setting Up Data")
 	pos_c = (ct.c_float*3)(*(camera.state.position))
 	dcm_c = (ct.c_float*9)(*(camera.state.attitude.toDCM().flatten()))
 	camsize_c = (ct.c_int*2)(*[camera.Ncols,camera.Nrows])
@@ -54,12 +54,12 @@ def find_mesh(camera):
 	fov_c = (ct.c_float*2)(camera.FOV_x,camera.FOV_y)
 	dirname_c = ct.create_string_buffer("./".encode())
 	# Calling the C script
-	log("Calling create_mesh",1)
+	info("find_mesh: Calling create_mesh")
 	status = create_mesh(pos_c,dcm_c,camsize_c,offset_c,mesh_c,colors_c,tris_c,ct.byref(count_c),meshsize_c,SubSamples_c,fov_c,dirname_c)
 	if status != 0:
-		error("create_mesh (C++ Script) returned status {}".format(status))
+		critical("create_mesh (C++ Script) returned status {}".format(status))
 	else:
-		log("create_mesh (C++ Script) returned status: {}".format(status),1)
+		info("create_mesh (C++ Script) returned status: {}".format(status))
 	meshsize = np.array([meshsize[1]*meshsize[0],meshsize[2]])
 	colorsize = np.array([colorsize[1]*colorsize[0],colorsize[2]])
 	mesh = np.frombuffer(mesh_c,dtype=np.float32).reshape(meshsize)
