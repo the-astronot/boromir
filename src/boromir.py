@@ -53,7 +53,7 @@ def build_parser():
 	parser.add_argument(
 		"--blender",
 		help="select Blender config file from configs/",
-		default=join(BLENDER_CONF_DIR,"blender.conf"),
+		default=join(BLENDER_CONF_DIR,"blender.json"),
 		type=partial(blender_check)
 	)
 	## CAMERA CONFIG FILE
