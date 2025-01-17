@@ -63,3 +63,24 @@ Special thanks to:
 - NASA Goddard Spaceflight Center and the LROC: for your maps that make this all possible
 - NASA Johnson Space Center: for inspiring this project
 - My parents: for supporting me through all this
+
+## Citing this Work
+
+If you use this repository for research/other work that is published, I **ask** that you cite it like the bibtex below:
+
+```
+@software{BOROMIR,
+  author  = {{Marshall, M.}},
+  year    = {2025},
+  title   = {BOROMIR},
+  url     = {https://github.com/the-astronot/boromir},
+  version = {1.0.0},
+  note    = {Computer Software}
+}
+```
+
+I also ask that you reach out and let me know! I'd be happy to see this work used and read any developments in Crater Navigation/etc that may come out in part due to it. Such works will be added below.
+
+## Papers that Use this Work
+
+
