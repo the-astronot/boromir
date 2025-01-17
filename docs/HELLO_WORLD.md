@@ -4,13 +4,14 @@ This file will outline a starter run to get you more familiar with BOROMIR.
 
 NOTE: Before starting this run, read through [INPUTS](INPUTS.md) and make sure that you have the Blender configs configured properly for your system/use case.
 
-In your terminal, enter the following command: `boromir --camera=hasselblad.json --logging=hello_world.log trajectory earth_rise.csv --job=hello_world`
+In your terminal, enter the following command: `boromir -v --camera=hasselblad.json --logging=hello_world.log trajectory earth_rise.csv --job=hello_world`
 
 ## WHAT DOES IT DO?
 
 Let's break it down, one piece at a time.
 
 - boromir : Calls the program
+- -v : Enable terminal output
 - --camera=hasselblad.json : Selects hasselblad.json from configs/cameras/ as the camera to use
 - --logging=hello_world.log : Creates file hello_world.log in logs/ as the log file
 - trajectory : the first positional argument, specifies that we are performing a trajectory-based run

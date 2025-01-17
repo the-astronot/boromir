@@ -33,11 +33,20 @@ def try_imports():
 	return True
 
 
-if __name__ == "__main__":
-	print(try_imports())
+def test_main():
+	# Try all the imports
+	assert try_imports()
+	print("All libraries located")
+
+	print()
+	print("Library versions:")
+	# Print the versions of all of the modules
 	for key in modules:
 		try:
-			print(getvar(key).__version__)
+			print("{} = {}".format(key,getvar(key).__version__))
 		except AttributeError:
-			print(key)
+			print("{} = unknown".format(key))
 
+
+if __name__ == "__main__":
+	test_main()

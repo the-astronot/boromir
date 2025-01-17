@@ -2,6 +2,10 @@
 
 Walking through the setup process.
 
+## Hardware
+
+The hardware requirements for running BOROMIR are... not exactly minor. I wouldn't recommend running it on a computer without a GPU (I've lost hours of my life running it on my GPU-less R620 development server) and a good chunk of ram. If you are stuck on older/less powerful hardware, I would start with smaller camera sizes and work your way up from there. If you have the time/inclination to note the time required to run the Hello World test script and feel like messaging me the time to complete and your hardware, I'd love to start a leaderboard of various hardware specs.
+
 ## Installation/Pre-requisites
 
 BOROMIR relies on the following programs:
@@ -10,6 +14,7 @@ BOROMIR relies on the following programs:
 - Python>=3.10
 - gcc
 - make
+- wget
 
 NOTE: BOROMIR was built for and runs on Linux-based systems. All development and testing has been done on Ubuntu and/or Rocky. It should run on any other Debian-based OS, but has not been tested further.
 

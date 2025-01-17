@@ -18,7 +18,7 @@ class Log_Levels():
 
 class Logger:
 	"""
-	
+		Handles all of the logging for the program
 	"""
 	def __init__(self,filename,verbose=False,level=0,force_overwrite=False):
 		self.filename = filename
@@ -69,7 +69,7 @@ class Logger:
 		if self.open_file:
 			self.f.close()
 			self.open_file = False
-			self.error("Closed {}".format(self.filename))
+			self.log("Closed {}".format(self.filename),level=0,also_print=True)
 
 ################################################################################
 LOGGER=Logger(None)

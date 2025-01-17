@@ -20,6 +20,7 @@ sys.path.append(SRC_DIR)
 from paths import *
 from Structures import Quaternion,State
 from metadata import create_metadata
+from error_codes import RenderError, RenderSetupError
 
 
 # Render object
@@ -49,7 +50,7 @@ def render(render_obj,i,scene):
 	pose = render_obj.poses[i]
 	camera.set_state(pose.cam_state)
 	if scene is None:
-		return 1
+		return RenderError.NO_SCENE
 	# Get everything
 	sun = bpy.data.objects["Light"]
 	earth = bpy.data.objects["EARTH"]
@@ -69,10 +70,10 @@ def render(render_obj,i,scene):
 	scene.render.filepath = filename
 	if exists(filename) and config["re_render"]==0: # Don't re-render rendered image
 		print("File: {} already exists, skipping...".format(basename(filename)))
-		return 2
+		return RenderError.RE_RENDER
 	startRender()
 	bpy.ops.render.render("INVOKE_DEFAULT",write_still=True)
-	return 0
+	return RenderError.SUCCESS
 	
 
 def setup(camera,config):
@@ -86,7 +87,7 @@ def setup(camera,config):
 
 	# Check for camera existence, if not existant, add one
 	if not "Camera" in bpy.data.objects:
-		print("No Camera, Adding Camera")
+		#print("No Camera, Adding Camera")
 		bpy.ops.object.camera_add()
 	cam = bpy.data.objects["Camera"]
 	scene = bpy.data.scenes["Scene"]
@@ -104,16 +105,16 @@ def setup(camera,config):
 	scene.render.resolution_y = camera.Nrows
 	exposure_offset = int(config["exposure_offset"])
 	scene.view_settings.exposure = np.log2((camera.F_Stop**2)/(camera.Exposure_Time))+np.log2(camera.iso/100)+exposure_offset
-	print("Exposure = {}".format(scene.view_settings.exposure))
+	#print("Exposure = {}".format(scene.view_settings.exposure))
 
 	# Config Moon
 	status = setup_Moon(config)
 	if status != 0:
-		return 1
+		return RenderSetupError.MOON_BUILD_FAIL, None
 	# Config Earth
 	status = setup_Earth(config)
 	if status != 0:
-		return 2
+		return RenderSetupError.EARTH_BUILD_FAIL, None
 
 	# Config Sun
 	if "Light" in bpy.data.objects:
@@ -156,7 +157,7 @@ def setup(camera,config):
 	scene.cycles.samples = int(config["samples"])
 	scene.cycles.use_denoising = bool(config["denoise"]=="true")
 
-	return scene
+	return RenderSetupError.SUCCESS, scene
 
 
 def setup_Moon(config):
@@ -292,9 +293,8 @@ def moveSun(obj, sun_los):
 
 # Global vars
 isRendering = False
-#MOON_ALBEDO_MAP = join(MAP_DIR,"lroc_color_poles.tif")#Trying replacement below
-MOON_ALBEDO_MAP = None #join(MAP_DIR,"moon_mosaic.png")
-EARTH_ALBEDO_MAP = None #join(MAP_DIR,"land_ocean_ice_cloud_8192.tif")
+MOON_ALBEDO_MAP = None
+EARTH_ALBEDO_MAP = None
 STARS_MAP = join(MAP_DIR,"hipp8.tif")
 
 
@@ -320,11 +320,12 @@ if __name__ == "__main__":
 	EARTH_ALBEDO_MAP= join(MAP_DIR,render_obj.configs["earth"]["albedo_map"])
 	
 	# Create scene
-	scene = setup(render_obj.camera,render_obj.configs)
+	status, scene = setup(render_obj.camera,render_obj.configs)
+	if status != 0: # Issue with setup
+		exit(3)
 
 	# Render each image
 	for i in range(len(render_obj.poses)):
-		#print(render_obj.poses[i].name)
 		status = render(render_obj,i,scene)
 		create_metadata(render_obj,i)
 		while isRendering is True:

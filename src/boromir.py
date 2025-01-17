@@ -45,7 +45,6 @@ import argparse
 import sys
 from os.path import abspath,dirname,join,isdir,basename
 from functools import partial
-import time
 
 # Local Imports
 import file_io as io
@@ -53,6 +52,8 @@ import trajectory_gen as traj_gen
 from Log import LOGGER,critical,warning,info,debug
 from error_codes import *
 from paths import *
+sys.path.append(TESTS_DIR)
+from test_runner import test_main
 
 
 def build_parser():
@@ -206,7 +207,7 @@ def build_test_parser(parser):
 	)
 	# Add Test-Specific Arguments
 	parser_test.add_argument(
-		"modules"
+		"--modules"
 	)
 	return parser
 
@@ -257,16 +258,11 @@ def process_random(args):
 
 def process_test(args):
 	# Run tests
+	test_main()
 	return
 
 
-
-# GLOBAL VARS
-VERSION = "1.0.0"
-
-# END GLOBAL VARS
-# BOROMIR Main Function
-if __name__ == "__main__":
+def main():
 	parser = build_parser()
 	args = parser.parse_args()
 	LOGGER.re_init(args.logging,
@@ -281,3 +277,14 @@ if __name__ == "__main__":
 		process_test(args)
 	else:
 		print(parser.print_help())
+	return
+
+
+# GLOBAL VARS
+VERSION = "1.0.0"
+# END GLOBAL VARS
+
+
+# BOROMIR Main Function
+if __name__ == "__main__":
+	main()
