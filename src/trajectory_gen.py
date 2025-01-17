@@ -43,6 +43,7 @@ def run(args,poses):
 	IMG_LOC = join(args.outdir,args.job)
 	BLEND_FILE = "{}.blend".format(join(TMP_DIR,args.job))
 	ALLOW_GK = not args.disable_gkm
+	PICKLE_FILE = join(TMP_DIR,"{}.pkl".format(args.job))
 
 	# Create Camera
 	camera = get_camera(CAMERA_CONF_FILE)
@@ -69,11 +70,8 @@ def run(args,poses):
 	renders = create_render_objs(poses,camera,configs,ALLOW_GK)
 
 	for i,render in enumerate(renders):
-		# Pickle the render objects
-		pickle_file = join(IMG_LOC,"{:05d}.pkl".format(i))
-		
 		# Pass data to blender code via pickle file
-		with open(pickle_file,"wb+") as f:
+		with open(PICKLE_FILE,"wb+") as f:
 			pickle.dump(render,f,protocol=pickle.HIGHEST_PROTOCOL)
 
 		# Set the camera to render the mesh
@@ -85,7 +83,7 @@ def run(args,poses):
 
 		# Get Blender to render the scene
 		info("Sent Render {}/{} to be rendered".format(i,len(renders)))
-		complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),pickle_file],capture_output=False,stdout=sp.DEVNULL)
+		complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
 
 		# Check for success
 		if complete_proc.returncode != 0:
@@ -93,7 +91,7 @@ def run(args,poses):
 			return 3
 		else:
 			info("Render #{} Completed".format(i))
-			os.remove(pickle_file)
+			os.remove(PICKLE_FILE)
 			os.remove(BLEND_FILE)
 	return 0
 

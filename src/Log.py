@@ -54,14 +54,12 @@ class Logger:
 		if level <= self.level:
 			if self.open_file:
 				self.f.write("{}\n".format(msg))
-			else:
+			elif self.verbose:
 				print(msg)
 				return
 			if also_print:
 				print(msg)
 				return
-		if self.verbose and level == 0:
-			print(msg)
 		return
 	
 	def error(self,msg):

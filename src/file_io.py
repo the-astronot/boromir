@@ -72,7 +72,9 @@ def read_traj_file(filename):
 
 	# Process each entry for requisite data
 	for i,entry in enumerate(entries):
-		if i == 0: # File header
+		#if i == 0: # File header
+		#	continue
+		if entry[0] == "#": # Do not run commented lines
 			continue
 	
 		# Unpack all the pose data

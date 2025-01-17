@@ -23,7 +23,7 @@ Here are my attempts at recreating actual images. NOTE: These were accomplished 
 | Real Image | BOROMIR Generated Image |
 | ---------- | ----------------------- |
 | ![Apollo 8 Earth Rise](docs/gallery/AS08-14-2383_resized.jpg) | ![BOROMIR's Earth Rise](docs/gallery/earth_rise.png) |
-|  |  |
+| ![Apollo 13 Tsiolkovsky Crater](docs/gallery/AS13-60-8626.jpg) | ![BOROMIR's Tsiolkovsky Crater](docs/gallery/tsiolkovsky.png) |
 
 ## Installation
 

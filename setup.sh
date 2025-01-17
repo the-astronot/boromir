@@ -32,9 +32,5 @@ echo "Installing Python Libraries"
 pip3 install -r "requirements.txt"
 echo "Finishing Installing Libraries"
 
-# Set environment variables (WiP)
-#BOROMIR_MAPS_LOC="$(pwd)/maps/"
-#export BOROMIR_MAPS_LOC
-
 deactivate
 

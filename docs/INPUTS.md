@@ -58,7 +58,7 @@ W.I.P.
 
 Unlike the other configs, the trajectory file is a csv with the following columns:
 
-NOTE: Boromir expects the first line of the file to contain a header, which is not used
+NOTE: Boromir treats lines beginning with "#" as comments, and ignores them
 
 NOTE: SEE [CONVENTIIONS](CONVENTIONS.md) for frame conventions explained
 

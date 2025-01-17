@@ -23,8 +23,10 @@ Unfortunately, in order to build larger, higher resolution images and maps, lots
 This is,in my opinion, Boromir's achilles heel. It can be **incredibly** slow, depending on the image size required and hardware that it is running on. That running time accumulates in 3 main locations:
 
 1. Finding the mesh vertices, faces, and uv coords. This was originally the worst of the bunch, but I rewrote it in C++ to speed it up as best I could. Further improvements could likely be made in improving my code or porting the code to use multiple threads/GPU computing, since a proper GPU is essentially already required for the renderer.
-2. Converting from the vertices and faces into a mesh that Blender can read. Blender exposes part of its API to do this. It doesn't feel particularly efficient, but they don't readily offer a better way of accessing the lower levels of the code to try and improve it.
-3. Assigning the uv coords to the faces on the Blender mesh. This is my current opponent. It is currently accomplished by a double nested for loop in Python, which becomes **quite** slow when tens of millions of faces are used. I'd like to improve this, but it seems like it would take figuring out how to get C code to recognize the blender structure and perform a faster for loop there. Its a bit more than I am inclined to rush headlong into at the moment.
+2. ~~Converting from the vertices and faces into a mesh that Blender can read. Blender exposes part of its API to do this. It doesn't feel particularly efficient, but they don't readily offer a better way of accessing the lower levels of the code to try and improve it.~~
+3. ~~Assigning the uv coords to the faces on the Blender mesh. This is my current opponent. It is currently accomplished by a double nested for loop in Python, which becomes **quite** slow when tens of millions of faces are used. I'd like to improve this, but it seems like it would take figuring out how to get C code to recognize the blender structure and perform a faster for loop there. Its a bit more than I am inclined to rush headlong into at the moment.~~
+
+I managed to find a lower level solution to the latter two time sinks. I'm waiting to determine whether that has alleviated that slowdown sufficiently.
 
 ## IMAGE QUALITY
 

@@ -1,0 +1,12 @@
+{
+	"FOV_x": 13.6844,
+	"FOV_y": 13.6855,
+	"iso": 64,
+	"F_Stop": 11,
+	"Exposure_Time": 0.004,
+	"NumBlades": 5,
+	"Nrows": 2048,
+	"Ncols": 2048,
+	"SubSamples": 2,
+	"OffsetPix": [128,128]
+}

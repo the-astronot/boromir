@@ -37,18 +37,34 @@ core*
 .vscode
 
 # Configs
-configs/
+configs/*/*
+
+# Basic Blender config
+!**/blender.json
+
+# Basic Cameras
+!**/testcam.json
+!**/hasselblad.json
+!**/smallcam.json
+
+# Basic Trajectories
+!**/earth_rise.csv
+!**/tsiolkovsky.csv
+
+# Basic Random Poses (W.I.P.)
+
 
 # Spice Files
 spicedata/*
 !spicedata/boromir.tm
 
-# Keep dirs
-!.exists
-
-# Trash/scratch
-scratch/*
+# Trash/scratch/temp
+#scratch/*
 trash/*
+tmp/*
 
 # Docs/Gallery
 !docs/**
+
+# Keep dirs
+!.exists

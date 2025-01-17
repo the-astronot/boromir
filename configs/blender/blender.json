@@ -1,0 +1,36 @@
+{
+	"device": "CPU",
+	"threads": 8,
+	"threads_mode": "AUTO",
+	"samples": 1024,
+	"bounces": 10,
+	"denoise": "false",
+	"moon":
+		{
+			"albedo_map": "moon_mosaic.png",
+			"roughness": 1.0,
+			"metallic": 0.0,
+			"ior": 1.0,
+			"bright": 0.45,
+			"contrast": 0.8
+		},
+	"earth":
+		{
+			"albedo_map": "land_ocean_ice_cloud_8192.tif",
+			"roughness": 0.5,
+			"metallic": 0.2,
+			"ior": 1.0,
+			"bright": 0.7,
+			"contrast": 1.0
+		},
+	"sun":
+		{
+			"energy": 1361,
+			"color": [1.0, 0.9587, 0.9178],
+			"angle": 0.00930
+		},
+	"re_render": 0,
+	"color_mode": "RGB",
+	"color_depth": 8,
+	"file_ext": "PNG"
+}
