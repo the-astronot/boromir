@@ -57,6 +57,7 @@ configs/*/*
 # Spice Files
 spicedata/*
 !spicedata/boromir.tm
+!spicedata/requirements.txt
 
 # Trash/scratch/temp
 #scratch/*

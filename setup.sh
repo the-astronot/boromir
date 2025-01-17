@@ -9,7 +9,10 @@
 setup/kernel_downloader.sh
 
 # Download Required DEM/Albedo Files
-setup/dem_download.sh
+setup/dem_downloader.sh
+
+# Prep Blender installs
+setup/setup_blender.sh
 
 # Build C++ Files
 src/cpp/buildmesh.sh
