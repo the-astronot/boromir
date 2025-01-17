@@ -28,26 +28,26 @@ echo; echo; echo;
 
 # Download NAIF Spice Kernels
 echo "Begin Downloading Spice Kernels"
-setup/kernel_downloader.sh || ( echo "Bad permissions" && exit )
+(setup/kernel_downloader.sh || ( echo "Bad permissions" && exit 1 )) || exit 1
 echo "End Downloading Spice Kernels"
 
 echo; echo; echo
 
 # Download Required DEM/Albedo Files
 echo "Begin Downloading DEM/Albedo Files"
-setup/dem_downloader.sh || ( echo "Bad permissions" && exit )
+(setup/dem_downloader.sh || ( echo "Bad permissions" && exit 1 )) || exit 2
 echo "End Downloading DEM/Albedo Files"
 
 echo; echo; echo
 
 # Prep Blender installs
 echo "Install Blender Python Libraries"
-setup/setup_blender.sh || (echo "Bad permissions" && exit )
+(setup/setup_blender.sh || (echo "Bad permissions" && exit 1)) || exit 3
 
 echo; echo; echo
 
 # Build C++ Files
 echo "Build C++ Script"
-( cd src/cpp && ./buildmesh.sh ) || ( echo "Bad permissions/FileNotFound" && exit )
+(( cd src/cpp && ./buildmesh.sh ) || ( echo "Bad permissions/FileNotFound" && exit 1) ) || exit 4
 
 deactivate
