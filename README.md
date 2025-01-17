@@ -53,7 +53,7 @@ Borrowing from the (claimed) words of Freddie Mercury, "do whatever you want wit
 
 ## Authors and Acknowledgements
 
-This project was authored by [Max Marshall](www.github.com/the-astronot) towards the fulfillment of a Masters of Engineering (M. Eng) degree at Rensselaer Polytechnic Institute (RPI) during the year of 2024.
+This project was authored by [Max Marshall](https://www.github.com/the-astronot) towards the fulfillment of a Masters of Engineering (M. Eng) degree at Rensselaer Polytechnic Institute (RPI) during the year of 2024.
 
 Special thanks to:
 

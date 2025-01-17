@@ -43,4 +43,4 @@ Once the above steps have been accomplished, perform the following:
    4. Create a new virtual environment
    5. Install the required python libraries to the environment
 4. Inspect the documentation in docs/. There is information there about the maps, inputs, conventions, limitations, etc that may answer some of your questions
-5. Try running the Hello World script as detailed in [HELLO WORLD](docs/HELLO_WORLD.md)
+5. Try running the Hello World script as detailed in [HELLO WORLD](HELLO_WORLD.md)
