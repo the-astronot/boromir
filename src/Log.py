@@ -69,7 +69,8 @@ class Logger:
 		if self.open_file:
 			self.f.close()
 			self.open_file = False
-			self.log("Closed {}".format(self.filename),level=0,also_print=True)
+			clock = time.strftime("[%H:%M:%S]",time.localtime())
+			print("{} Closed {}".format(clock,self.filename))
 
 ################################################################################
 LOGGER=Logger(None)
