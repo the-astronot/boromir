@@ -295,7 +295,7 @@ def moveSun(obj, sun_los):
 isRendering = False
 MOON_ALBEDO_MAP = None
 EARTH_ALBEDO_MAP = None
-STARS_MAP = join(MAP_DIR,"hipp8.tif")
+STARS_MAP = None #join(MAP_DIR,"hipp8.tif")
 
 
 if __name__ == "__main__":
@@ -318,6 +318,7 @@ if __name__ == "__main__":
 	# Get Albedo Maps
 	MOON_ALBEDO_MAP = join(MAP_DIR,render_obj.configs["moon"]["albedo_map"])
 	EARTH_ALBEDO_MAP= join(MAP_DIR,render_obj.configs["earth"]["albedo_map"])
+	STARS_MAP = join(MAP_DIR,render_obj.configs["star_map"])
 	
 	# Create scene
 	status, scene = setup(render_obj.camera,render_obj.configs)

@@ -7,8 +7,12 @@
 
 # Download the files
 download() {
+	FILENAME=${1##*/}
+	if [[ -f "$2/$FILENAME" ]]; then # File already downloaded
+		return
+	fi
 	echo "Downloading $1..."
-	wget -c -P "$2" --tries=0 "$1" --show-progress --random-wait -a "dem.log"
+	wget -c -P "$2" --tries=0 "$1" --show-progress --random-wait -a "$2/dem.log"
 	echo -e "Finished Downloading $1 to $2\n"
 }
 
@@ -34,7 +38,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 MAPDIR="$SCRIPT_DIR/../maps/"
 
 # Star Map File
-STAR_MAP="https://github.com/nasa/NASA-3D-Resources/blob/master/Images%20and%20Textures/Hipparcos%20Star%20Map/hipp8.tif?raw=true"
+STAR_MAP="https://github.com/nasa/NASA-3D-Resources/raw/refs/heads/master/Images%20and%20Textures/Hipparcos%20Star%20Map/Hipparcos%20Star%20Map.tif"
 
 # LOLA 118mpp DEM
 LOLA_118="https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif"
@@ -63,20 +67,25 @@ EARTH_ALBEDO_MAP="https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57735
 
 # Build Collection of Files to Download
 ## Feel free to add more maps here
-MAPS=($STAR_MAP $ALBEDO_MAP $EARTH_ALBEDO_MAP $LOLA_118 $LOLA_87S_5 $WAC_MOS_1 $WAC_MOS_2 $WAC_MOS_3 $WAC_MOS_4 $WAC_MOS_5 $WAC_MOS_6 $WAC_MOS_7 $WAC_MOS_8)
+MAPS=($STAR_MAP $ALBEDO_MAP $EARTH_ALBEDO_MAP $LOLA_118 $LOLA_87S_5) #$WAC_MOS_1 $WAC_MOS_2 $WAC_MOS_3 $WAC_MOS_4 $WAC_MOS_5 $WAC_MOS_6 $WAC_MOS_7 $WAC_MOS_8)
 
 # Download all maps
-trydelete "dem.log"
+trydelete "$MAPDIR/dem.log"
 for i in "${MAPS[@]}"; do
 	download "$i" "$MAPDIR"
 done
 
 # Rename the tif file
-trymove "$MAPDIR/hipp8.tif?raw=true" "$MAPDIR/hipp8.tif"
+#trymove "$MAPDIR/hipp8.tif?raw=true" "$MAPDIR/hipp8.tif"
 
 BIN_FILES_COUNT=$(find "$MAPDIR" -name "*.bin" | wc -l)
 if [[ "$BIN_FILES_COUNT" -lt "$NUM_BIN_FILES" ]]; then
 	cd "$MAPDIR" && python3 tiff2bin.py
+fi
+
+if [[ ! -f "$MAPDIR/moon_mosaic.png" ]]; then
+	echo "Building Mosaic"
+	cd "$MAPDIR" && python3 mosaic_constructor.py
 fi
 
 ################################################################################

@@ -1,6 +1,6 @@
 opencv-python
 matplotlib
-numpy
+numpy==1.26.4
 tqdm
 bpy
 pandas

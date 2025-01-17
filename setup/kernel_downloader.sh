@@ -8,7 +8,7 @@
 # Download the files
 download() {
 	echo "Downloading $1..."
-	wget -c -P "$2" --tries=0 "$1" --show-progress --random-wait -a kernel.log
+	wget -c -P "$2" --tries=0 "$1" --show-progress --random-wait -a "$2/kernel.log"
 	echo -e "Finished Downloading $1 to $2\n"
 }
 
@@ -24,7 +24,7 @@ SPICE_DIR="$SCRIPT_DIR/../spicedata"
 NAIF_LINK="https://naif.jpl.nasa.gov/pub/naif/generic_kernels"
 
 # Download all requirements from file
-trydelete "kernel.log"
+trydelete "$SPICE_DIR/kernel.log"
 while read -r line; do
 	download "$NAIF_LINK/$line" "$SPICE_DIR"
 done <"$SPICE_DIR/requirements.txt"

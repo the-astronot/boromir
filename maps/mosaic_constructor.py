@@ -44,12 +44,12 @@ def fix_map(img,nsbounds):
 	# Replace lack of data at North Pole
 	top = nsbounds[0]
 	top_avg = np.average(img[top:top+10],weights=mask[top:top+10]) 
-	print(top_avg)
+	#print(top_avg)
 	img[:top+1,:] = top_avg + np.random.randint(min_noise,max_noise,(top+1,width))
 	# Replace lack of data at South Pole
 	bottom = nsbounds[1]-1
 	bottom_avg = np.average(img[bottom-10:bottom],weights=mask[bottom-10:bottom])
-	print(bottom_avg)
+	#print(bottom_avg)
 	img[bottom-1:,:] = bottom_avg + np.random.randint(min_noise,max_noise,(height-(bottom-1),width))
 
 	return img
@@ -74,7 +74,7 @@ def main():
 			south_bounds = [tile_size[0],bound_70[1]]
 			nsbounds = [north_bounds,south_bounds][j//4]
 			ewbounds = [(j%4)*tile_size[0],((j%4)+1)*tile_size[0]]
-			print(nsbounds,ewbounds)
+			#print(nsbounds,ewbounds)
 			mosaic[nsbounds[0]:nsbounds[1],ewbounds[0]:ewbounds[1],i] = res_image
 		mosaic[:,:,i] = fix_map(mosaic[:,:,i],bound_70)
 	cv2.imwrite("moon_mosaic.png",mosaic)

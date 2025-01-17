@@ -60,15 +60,22 @@ def run(args,poses):
 		return 1
 	if "albedo_map" not in configs["earth"]:
 		critical("\"earth/albedo_map\" not in Blender config file, exiting...")
-		return 1
+		return 2
+	if "star_map" not in configs:
+		critical("\"star_map\" not in Blender config file, exiting...")
+		return 3
 	MOON_ALBEDO_MAP = join(MAP_DIR,configs["moon"]["albedo_map"])
 	if not (exists(MOON_ALBEDO_MAP) and isfile(MOON_ALBEDO_MAP)):
 		critical("Moon albedo_map: {} not found, exiting...".format(MOON_ALBEDO_MAP))
-		return 3
+		return 4
 	EARTH_ALBEDO_MAP = join(MAP_DIR,configs["earth"]["albedo_map"])
 	if not (exists(EARTH_ALBEDO_MAP) and isfile(EARTH_ALBEDO_MAP)):
 		critical("Earth albedo_map: {} not found, exiting...".format(EARTH_ALBEDO_MAP))
-		return 4
+		return 5
+	STAR_MAP = join(MAP_DIR,configs["star_map"])
+	if not (exists(STAR_MAP) and isfile(STAR_MAP)):
+		critical("Star map: {} not found, exiting...".format(STAR_MAP))
+		return 6
 
 	# Create Render Objects
 	renders = create_render_objs(poses,camera,configs,ALLOW_GK)

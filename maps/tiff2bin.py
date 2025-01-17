@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import struct
 from tqdm import tqdm
+from os.path import exists
 
 typs = ["short","int","float","double"]
 
@@ -45,4 +46,5 @@ if __name__ == "__main__":
 	types = ["float",
 					"short"]
 	for i in range(len(filenames)):
-		open_dem(filenames[i],types[i])
+		if not exists(filenames[i].replace(".tif",".bin")):
+			open_dem(filenames[i],types[i])

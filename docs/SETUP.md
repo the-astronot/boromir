@@ -32,16 +32,18 @@ Finally, you'll need to clone/download this repo to your machine.
 
 ## Setup
 
+NOTE: During setup, scripts download a whole bunch of maps. If you notice that any of the links are dead, please notify me and I'll get a replacement set up.
+
 Once the above steps have been accomplished, perform the following:
 
 1. Confirm that you can run blender from the commandline by running `blender --version`
 2. Make sure that you have the privileges to execute the following files: `setup/dem_downloader.sh`, `setup/kernel_downloader.sh`, `setup/setup_blender.sh`, and `src/cpp/buildmesh.sh`
 3. Cd to the parent directory for this repo
 4. Run `setup.sh`. This will perform the following actions:
-   1. Download the requisite SPICE kernels
-   2. Download and modify the assorted albedo and DEM maps. NOTE: This may take some time. Some of the maps can be pretty large and the servers are not the most responsive. Please be kind.
-   3. Build the C++ script for the codebase
-   4. Create a new virtual environment
-   5. Install the required python libraries to the environment
+   1. Create a new virtual environment
+   2. Install the required python libraries to the environment
+   3. Download the requisite SPICE kernels
+   4. Download and modify the assorted albedo and DEM maps. NOTE: This may take some time. Some of the maps can be pretty large and the servers are not the most responsive. Please be kind.
+   5. Build the C++ script for the codebase
 5. Inspect the documentation in docs/. There is information there about the maps, inputs, conventions, limitations, etc that may answer some of your questions
 6. Try running the Hello World script as detailed in [HELLO WORLD](HELLO_WORLD.md)
