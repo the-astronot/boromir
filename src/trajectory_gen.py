@@ -50,7 +50,11 @@ def run(args,poses):
 
 	# Load blender configs
 	configs = io.load_config(BLENDER_CONF_FILE)
+
+	# Add img dir to configs
 	configs["outdir"] = IMG_LOC
+
+	# Check out the desired maps
 	if "albedo_map" not in configs["moon"]:
 		critical("\"moon/albedo_map\" not in Blender config file, exiting...")
 		return 1

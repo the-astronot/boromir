@@ -102,10 +102,9 @@ def setup(camera,config):
 	cam.data.dof.aperture_fstop = camera.F_Stop
 	scene.render.resolution_x = camera.Ncols
 	scene.render.resolution_y = camera.Nrows
-	exposure_offset = 22
-	scene.view_settings.exposure = np.log2((camera.F_Stop**2)/(camera.Exposure_Time))+np.log2(camera.iso/100)-exposure_offset
+	exposure_offset = int(config["exposure_offset"])
+	scene.view_settings.exposure = np.log2((camera.F_Stop**2)/(camera.Exposure_Time))+np.log2(camera.iso/100)+exposure_offset
 	print("Exposure = {}".format(scene.view_settings.exposure))
-	#scene.view_settings.exposure = -8 # EV, testing
 
 	# Config Moon
 	status = setup_Moon(config)

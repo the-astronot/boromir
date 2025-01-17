@@ -30,6 +30,7 @@ This config contains all of the requisite data for configuring Blender
   - energy: The energy of the sunlight, in W/m^2
   - color: The color of the sun, in RGB, from 0 to 1 for each band
   - angle: The angular diameter of the Sun, in radians
+- exposure_offset: Integer offset to try and correct for Blender's funky math
 - re_render: DEPRECATED Whether or not to regenerate an already rendered image
 - color_mode: One of \["RGB","BW"\], What colorspace is used for the image
 - color_depth: The bit depth of the pixels in the image

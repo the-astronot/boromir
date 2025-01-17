@@ -102,6 +102,3 @@ wavelengths = [
 
 if __name__ == "__main__":
 	main()
-	#mosaic = cv2.imread(join(MAP_DIR,"moon_albedo.png"))
-	#small_mosaic = cv2.resize(mosaic,(2048,1024))
-	#cv2.imwrite(join(MAP_DIR,"small_moon_albedo.png"),small_mosaic)

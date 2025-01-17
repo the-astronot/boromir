@@ -1,17 +1,10 @@
 # ROADMAP
 
-## Requirements for Release
+## Next Steps
 
-1. Finish up arguments, etc X
-2. Restructure Trajectory code X
-3. Restructure Random Pose code
-4. Comment everything and remove confusing bits
-5. Add downloader for SPICE data X
-6. Finish Readme instructions
-7. Update metadata
-8. 
-
-## Nice to haves
-
-1. Add Earth/shine X
-2. Add tests of relevant bits
+- Add code to allow random pose generation
+  - Create input structure
+  - Work on code to rnadomly meet specified conditions
+- Work out a method for combining the meshes of like poses
+  - Will cut down on overall time required
+- Add a whole lot of proper testing code

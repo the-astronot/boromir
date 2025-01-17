@@ -29,6 +29,7 @@
 			"color": [1.0, 0.9587, 0.9178],
 			"angle": 0.00930
 		},
+	"exposure_offset": -22,
 	"re_render": 0,
 	"color_mode": "RGB",
 	"color_depth": 8,
