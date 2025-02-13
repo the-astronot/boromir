@@ -4,13 +4,21 @@
 ################################################################################
 # Library imports
 import sys
+import os
+from os.path import exists,basename,dirname,abspath,join
+################################################################################
+#..I'm sorry, Blender sucks and it requires this workaround....................#
+if __name__ == "__main__":
+	ROOT_DIR = dirname(dirname(abspath(__file__)))
+	version = "{}.{}".format(sys.version_info.major,sys.version_info.minor)
+	site_pkgs = join(ROOT_DIR,".venv","lib","python{}".format(version),"site-packages")
+	sys.path.append(site_pkgs)
+	import mathutils as mu
+################################################################################
 import pickle
 import bpy
 import numpy as np
 from numpy.linalg import norm
-import os
-from os.path import exists,basename,dirname,abspath
-import mathutils as mu
 import time
 
 SRC_DIR = dirname(abspath(__file__))
