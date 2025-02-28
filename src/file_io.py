@@ -3,7 +3,6 @@
 import json
 import os
 from os.path import exists,join,abspath,dirname,basename,isdir,isfile
-import contextlib
 import numpy as np
 
 # Local imports
@@ -81,7 +80,7 @@ def read_traj_file(filename):
 		data = entry.strip(",").split(",")
 		name = data[0]
 		cam_pos = np.array(data[1:4],dtype=float)
-		cam_quat = Quaternion(data[4],np.array(data[5:8],dtype=float))
+		cam_quat = Quaternion(data[4],-np.array(data[5:8],dtype=float))
 		cam_state = State(position=cam_pos,attitude=cam_quat)
 		time = None
 		sun_los = None

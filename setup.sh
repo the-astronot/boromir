@@ -40,11 +40,12 @@ echo "End Downloading DEM/Albedo Files"
 
 echo; echo; echo
 
-# Prep Blender installs
-echo "Install Blender Python Libraries"
-(setup/setup_blender.sh || (echo "Bad permissions" && exit 1)) || exit 3
-
-echo; echo; echo
+### Experimenting with removing blender installs
+# Prep Blender installs 
+#echo "Install Blender Python Libraries"
+#(setup/setup_blender.sh || (echo "Bad permissions" && exit 1)) || exit 3
+#
+#echo; echo; echo
 
 # Build C++ Files
 echo "Build C++ Script"

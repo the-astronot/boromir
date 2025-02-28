@@ -4,7 +4,7 @@
 	"threads_mode": "AUTO",
 	"samples": 1024,
 	"bounces": 10,
-	"denoise": "false",
+	"denoise": "true",
 	"moon":
 		{
 			"albedo_map": "moon_mosaic.png",

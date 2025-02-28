@@ -80,12 +80,23 @@ class Quaternion():
 	def toArray(self):
 		return array([self.s,self.v[0],self.v[1],self.v[2]])
 	
+	def fromArray(self,arr):
+		"""
+			Assumes that array is set up like: [s,v1,v2,v3]
+		"""
+		self.s = float(arr[0])
+		self.v = np.array(arr[1:4],dtype=float)
 
-# Common Quaternions
-#quatWorldtoCam = Quaternion()
-#quatWorldtoCam.fromDCM(array([[0,0,1],
-#															[-1,0,0],
-#															[0,-1,0]]))
+
+def quat_mult(q1,q2):
+	"""
+		Multiply q1 by q2
+	"""
+	q3 = Quaternion()
+	q3.s = q1.s*q2.s-(np.sum(q1.v*q2.v))
+	q3.v = q1.s*q2.v + q2.s*q1.v + np.cross(q1.v,q2.v)
+	return q3
+
 
 
 class State():
@@ -97,6 +108,12 @@ class State():
 
 	def __init__(self,position=None,attitude=None):
 		if position is not None:
-			self.position = array(position)
+			self.position = array(position,dtype=float)
 		if attitude is not None:
 			self.attitude = attitude
+
+	def copy(self):
+		new_state = State()
+		new_state.position = self.position
+		new_state.attitude = Quaternion(self.attitude.s,self.attitude.v)
+		return new_state

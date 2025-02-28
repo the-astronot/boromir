@@ -64,7 +64,12 @@ class Camera():
 			critical("Camera FOV(s) are negative")
 			return 1
 		return 0
-
+	
+	def copy(self):
+		if hasattr(self,"state") and self.state is not None:
+			return Camera(json=self.to_dict(),state=self.state.copy())
+		return(Camera(json=self.to_dict()))
+	
 
 def get_camera(filename):
 	cam_data=None

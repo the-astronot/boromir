@@ -56,14 +56,14 @@ def create_metadata(render,idx):
 	if pose.render_earth:
 		data["Earth Pos (m)"] = pose.earth_state.position.tolist()
 		data["Earth Quat (s)"] = pose.earth_state.attitude.s
-		data["Earth Quat (v)"] = pose.earth_state.attitude.v.tolist()
+		data["Earth Quat (v)"] = (-1*pose.earth_state.attitude.v).tolist()
 	#data = get_data(data,"Earth Pos (m)",state_data,"EARTH/POS")
 	#data = get_data(data,"Earth Quat (s)",state_data,"EARTH/QUAT/s")
 	#data = get_data(data,"Earth Quat (v)",state_data,"EARTH/QUAT/v")
 	## SC/CAM 6-DOF
 	data["Cam Pos (m)"] = pose.cam_state.position.tolist()
 	data["Cam Quat (s)"] = pose.cam_state.attitude.s
-	data["Cam Quat (v)"] = pose.cam_state.attitude.v.tolist()
+	data["Cam Quat (v)"] = (-1*pose.cam_state.attitude.v).tolist()
 	#data = get_data(data,"SC Pos (m)",state_data,"SC/POS")
 	#data = get_data(data,"SC Quat (s)",state_data,"SC/QUAT/s")
 	#data = get_data(data,"SC Quat (v)",state_data,"SC/QUAT/v")

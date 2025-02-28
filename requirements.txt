@@ -7,3 +7,4 @@ pandas
 scikit-image
 spiceypy
 pytest
+pillow

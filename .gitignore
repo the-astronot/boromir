@@ -63,9 +63,15 @@ spicedata/*
 #scratch/*
 trash/*
 tmp/*
+scratch/data
+scratch/images
 
 # Docs/Gallery
 !docs/**
 
 # Keep dirs
 !.exists
+
+# Ditch extra files
+comeandtakeit
+*.gif

@@ -15,6 +15,7 @@ from build_mesh import build_mesh
 from paths import TMP_DIR,MAP_DIR,SRC_DIR
 from Structures import State
 from gkmethod import gkmethod
+import pose_combiner as pc
 
 
 
@@ -78,7 +79,11 @@ def run(args,poses):
 		return 6
 
 	# Create Render Objects
-	renders = create_render_objs(poses,camera,configs,ALLOW_GK)
+	renders = create_render_objs(poses,camera,configs,ALLOW_GK,True)
+
+	info("Created {} Render Objects".format(len(renders)))
+
+	#return 0
 
 	for i,render in enumerate(renders):
 		# Pass data to blender code via pickle file
@@ -86,41 +91,65 @@ def run(args,poses):
 			pickle.dump(render,f,protocol=pickle.HIGHEST_PROTOCOL)
 
 		# Set the camera to render the mesh
-		camera.set_state(render.mesh_state)
+		if render.mesh_state is None:
+			# Get Blender to render the scene
+			info("Sent Render {}/{} to be rendered".format(i,len(renders)))
+			complete_proc = sp.run(["blender","-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
 
-		# Find and build the mesh
-		mesh,tris,colors = find_mesh(camera)
-		build_mesh(mesh,tris,colors,BLEND_FILE)
+			# Check for success
+			if complete_proc.returncode != 0:
+				critical("Render #{} failed with error code {}\n\tPickle and Blender files have been left for inspection".format(i,complete_proc.returncode))
+				return 3
+			else:
+				info("Render #{} Completed".format(i))
+				os.remove(PICKLE_FILE)
 
-		# Get Blender to render the scene
-		info("Sent Render {}/{} to be rendered".format(i,len(renders)))
-		complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
-
-		# Check for success
-		if complete_proc.returncode != 0:
-			critical("Render #{} failed with error code {}\n\tPickle and Blender files have been left for inspection".format(i,complete_proc.returncode))
-			return 3
 		else:
-			info("Render #{} Completed".format(i))
-			os.remove(PICKLE_FILE)
-			os.remove(BLEND_FILE)
+			camera.set_state(render.mesh_state)
+
+			# Find and build the mesh
+			debug("Camera Position is: {}".format(camera.state.position))
+			debug("Camera Attitude is: {}".format(camera.state.attitude))
+			mesh,tris,colors = find_mesh(camera)
+			build_mesh(mesh,tris,colors,BLEND_FILE)
+
+			# Get Blender to render the scene
+			info("Sent Render {}/{} to be rendered".format(i,len(renders)))
+			complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
+
+			# Check for success
+			if complete_proc.returncode != 0:
+				critical("Render #{} failed with error code {}\n\tPickle and Blender files have been left for inspection".format(i,complete_proc.returncode))
+				return 3
+			else:
+				info("Render #{} Completed".format(i))
+				os.remove(PICKLE_FILE)
+				os.remove(BLEND_FILE)
 	return 0
 
 
-def create_render_objs(poses,camera,configs,allow_gk):
+def create_render_objs(poses,camera,configs,allow_gk,allow_combine):
 	"""
 		Find method for creating render objects from poses
 	"""
 	# Starting with the naive method
 	renders = []
-	for pose in poses:
-		mesh_cam_state = pose.cam_state
-		if allow_gk:
-			camera.set_state(pose.cam_state)
-			mesh_cam_state = gkmethod(camera)
-			if mesh_cam_state is None:
-				continue
-			mesh_cam_state = mesh_cam_state.state
-		render = Render(camera,[pose],mesh_cam_state,configs)
-		renders.append(render)
+	if allow_combine:
+		combined_poses,mesh_cameras = pc.combine_poses(poses,camera)
+		for i,pose_set in enumerate(combined_poses):
+			mesh_cam_state = None
+			if mesh_cameras[i] is not None:
+				mesh_cam_state = mesh_cameras[i].state
+			renders.append(Render(camera,pose_set,mesh_cam_state,configs))
+	else:
+		for pose in poses:
+			mesh_cam_state = pose.cam_state
+			if allow_gk:
+				camera.set_state(pose.cam_state)
+				mesh_cam_state = gkmethod(camera)
+				if mesh_cam_state is None:
+					continue # Don't render non-Moon images
+				mesh_cam_state = mesh_cam_state.state
+			render = Render(camera,[pose],mesh_cam_state,configs)
+			renders.append(render)
 	return renders
