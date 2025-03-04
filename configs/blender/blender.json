@@ -1,5 +1,5 @@
 {
-	"device": "CPU",
+	"device": "CUDA",
 	"threads": 8,
 	"threads_mode": "AUTO",
 	"samples": 1024,
@@ -7,7 +7,7 @@
 	"denoise": "true",
 	"moon":
 		{
-			"albedo_map": "moon_mosaic.png",
+			"albedo_map": "lroc_color_poles.tif",
 			"roughness": 1.0,
 			"metallic": 0.0,
 			"ior": 1.0,

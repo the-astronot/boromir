@@ -51,6 +51,34 @@ def endRender(a,b):
 	isRendering = False
 
 
+def enable_gpus(device_type):
+	"""
+		Enable the GPU
+		Taken from: https://blender.stackexchange.com/questions/156503/rendering-on-command-line-with-gpu
+	"""
+	prefs = bpy.context.preferences
+	cycles_prefs = prefs.addons["cycles"].preferences
+	cycles_prefs.refresh_devices()
+	devices = cycles_prefs.devices
+	use_cpus = False
+	if device_type == "CPU":
+		use_cpus = True
+	
+	activated_gpus = []
+	for device in devices:
+		if device.type == "CPU":
+			device.use = use_cpus
+		else:
+			device.use=True
+			activated_gpus.append(device.name)
+	
+	if len(activated_gpus) > 0:
+		cycles_prefs.compute_device_type = device_type
+		bpy.context.scene.cycles.device = "GPU"
+	
+	return activated_gpus
+
+
 def render(render_obj,i,scene):
 	global isRendering
 	camera = render_obj.camera
@@ -161,7 +189,7 @@ def setup(camera,config):
 	scene.render.threads_mode = config["threads_mode"]
 	scene.render.use_persistent_data = True
 	scene.render.threads = int(config["threads"])
-	scene.cycles.device = config["device"]
+	#scene.cycles.device = config["device"]
 	scene.cycles.samples = int(config["samples"])
 	scene.cycles.use_denoising = bool(config["denoise"]=="true")
 
@@ -328,6 +356,9 @@ if __name__ == "__main__":
 	EARTH_ALBEDO_MAP= join(MAP_DIR,render_obj.configs["earth"]["albedo_map"])
 	STARS_MAP = join(MAP_DIR,render_obj.configs["star_map"])
 	
+	# Enable GPUs
+	enable_gpus(render_obj.configs["device"])
+
 	# Create scene
 	status, scene = setup(render_obj.camera,render_obj.configs)
 	if status != 0: # Issue with setup

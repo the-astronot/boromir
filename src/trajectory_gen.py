@@ -114,7 +114,7 @@ def run(args,poses):
 			build_mesh(mesh,tris,colors,BLEND_FILE)
 
 			# Get Blender to render the scene
-			info("Sent Render {}/{} to be rendered".format(i,len(renders)))
+			info("Sent Render {}/{} to be rendered".format(i+1,len(renders)))
 			complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
 
 			# Check for success
