@@ -61,6 +61,7 @@ spicedata/*
 
 # Trash/scratch/temp
 #scratch/*
+scratch_noshare
 trash/*
 tmp/*
 scratch/data

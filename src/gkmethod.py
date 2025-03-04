@@ -48,21 +48,10 @@ def gkmethod(camera):
 		info("NADIR Angle within tolerance, aborted GKM")
 		return camera
 
-	# Calculate Line of sights to Moon segments
-	diff = xyzs-pos.reshape(3,)
-	moon_los = diff/norm(diff,axis=2).reshape(ra_sections,decl_sections,1)
-
-	# Determine what "blob" of the Moon surface can be seen by the camera
-	nabla = dot(-moon_los,pos)**2-(norm(pos)**2-RADIUS**2)
-	min_dist = abs(-dot(-moon_los,pos)+sqrt(nabla))
-	angles = np.where((min_dist+TOL).reshape(360,180)>=norm(diff,axis=2),np.dot(moon_los,los),-1)
-	blob_target = np.where(angles>fov_bounds,norm(diff,axis=2),0)
-
-	# Finding the locations on the blob
-	blob_xyzs = np.where(blob_target.reshape(360,180,1)>0,xyzs,array([0,0,0]))
+	blob_target = get_coverage(pos,los,sqrt(camera.FOV_x**2+camera.FOV_y**2))
 	
 	# Get camera pose from coverage blob
-	camera = get_camera_from_coverage(blob_xyzs,camera)
+	camera = get_camera_from_coverage(blob_target,camera)
 
 	return camera
 

@@ -24,7 +24,7 @@ def combine_poses(poses,camera,threshold=.7,ra=360):
 			if compare_poses(coverage,comb_maps[j],threshold=threshold):
 				debug("Combined 2 Maps!")
 				comb_poses[j].append(pose)
-				comb_maps[j] = comb_maps[j]+coverage
+				comb_maps[j] = np.where(comb_maps[j]+coverage>0,1,0)
 				added = True
 				break
 		if not added:
