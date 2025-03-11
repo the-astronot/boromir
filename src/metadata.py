@@ -43,6 +43,7 @@ def create_metadata(render,idx):
 	pose = render.poses[idx]
 	meta_file = join(config["outdir"],"{}.json".format(pose.name))
 	data = {}
+	config = camera2config(render.camera,old_config=config)
 	## World Data
 	if pose.time is None:
 		data["Time (s)"] = "N/A"
@@ -57,21 +58,10 @@ def create_metadata(render,idx):
 		data["Earth Pos (m)"] = pose.earth_state.position.tolist()
 		data["Earth Quat (s)"] = pose.earth_state.attitude.s
 		data["Earth Quat (v)"] = (-1*pose.earth_state.attitude.v).tolist()
-	#data = get_data(data,"Earth Pos (m)",state_data,"EARTH/POS")
-	#data = get_data(data,"Earth Quat (s)",state_data,"EARTH/QUAT/s")
-	#data = get_data(data,"Earth Quat (v)",state_data,"EARTH/QUAT/v")
 	## SC/CAM 6-DOF
 	data["Cam Pos (m)"] = pose.cam_state.position.tolist()
 	data["Cam Quat (s)"] = pose.cam_state.attitude.s
 	data["Cam Quat (v)"] = (-1*pose.cam_state.attitude.v).tolist()
-	#data = get_data(data,"SC Pos (m)",state_data,"SC/POS")
-	#data = get_data(data,"SC Quat (s)",state_data,"SC/QUAT/s")
-	#data = get_data(data,"SC Quat (v)",state_data,"SC/QUAT/v")
-	#data = get_data(data,"SC LoS",state_data,"SC/LOS")
-	#data = get_data(data,"Cam Pos (m)",state_data,"CAM/POS")
-	#data = get_data(data,"Cam Quat (s)",state_data,"CAM/QUAT/s")
-	#data = get_data(data,"Cam Quat (v)",state_data,"CAM/QUAT/v")
-	#data = get_data(data,"Cam LoS",state_data,"CAM/LOS")
 	## Camera Settings
 	data = get_data(data,"FOV X (rad)",config,"FOV_x")
 	data = get_data(data,"FOV Y (rad)",config,"FOV_y")
@@ -80,13 +70,14 @@ def create_metadata(render,idx):
 	data = get_data(data,"Nrows",config,"Nrows")
 	data = get_data(data,"Ncols",config,"Ncols")
 	data = get_data(data,"Subsamples",config,"SubSamples")
-	data = get_data(data,"Offset (pix)",config,"OffsetPix")
 	data = get_data(data,"Exposure_Time",config,"Exposure_Time")
 	data = get_data(data,"ISO",config,"iso")
+	if "OffsetPixels" in config:
+		data["OffsetPix"] = [int(config["OffsetPix"][0]),int(config["OffsetPix"][1])]
 	## Blender Settings
-	data = get_data(data,"Render Samples",config,"Samples")
-	data = get_data(data,"Light_Bounces",config,"Bounces")
-	data = get_data(data,"Denoise",config,"Denoise")
+	data = get_data(data,"Render Samples",config,"samples")
+	data = get_data(data,"Light_Bounces",config,"bounces")
+	data = get_data(data,"Denoise",config,"denoise")
 	data = get_data(data,"Bit_Depth",config,"color_depth")
 	data = get_data(data,"Color_Mode",config,"color_mode")
 	data = get_data(data,"Moon_Albedo_File",config,"moon/albedo_map")

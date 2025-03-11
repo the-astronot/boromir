@@ -29,26 +29,23 @@ def gkmethod(camera):
 	decl_sections = 180
 	xyzs = generate_moon_map(ra_sections=ra_sections,decl_sections=decl_sections)
 
-	# Find camera FOV bounds
-	fov_bounds = cos(sqrt(camera.FOV_x**2+camera.FOV_y**2)/2)
-	debug("FOV Bounds: {:.4f}".format(fov_bounds))
-
 	# Convert camera state data 
 	DCM = camera.state.attitude.toDCM()
-	los = DCM@array([0,0,1])
+	los = DCM.T@array([0,0,1])
 	pos = camera.state.position
 	los = (los/norm(los))
 	debug("Line of Sight: {}".format(los))
 	
 	# Calculate offnadir angle
 	unity_pos = (pos/norm(pos)).reshape(3,)
-	offnadir = arccos(min(1,max(dot(unity_pos,-los),-1)))
+	offnadir = arccos(dot(unity_pos,-los))
+	debug("Quaternion: {}".format(camera.state.attitude))
 	debug("NADIR Angle = {}".format(rad2deg(offnadir)))
 	if offnadir < OFFNADIR_THRESH:
 		info("NADIR Angle within tolerance, aborted GKM")
 		return camera
 
-	blob_target = get_coverage(pos,los,sqrt(camera.FOV_x**2+camera.FOV_y**2))
+	blob_target = get_coverage(pos,los,max(camera.FOV_x,camera.FOV_y))
 	
 	# Get camera pose from coverage blob
 	camera = get_camera_from_coverage(blob_target,camera)
@@ -65,11 +62,11 @@ def get_coverage(pos,los,fov,ra=360):
 	#info("Shape is: {}".format(shape))
 	shape[2] = 1
 	diff = moon_xyzs-pos
-	fov_bounds = cos(fov/2)
 	max_dist = sqrt(norm(pos)**2+RADIUS**2)
 	moon_los = diff/norm(diff,axis=2).reshape(shape)
-	angles = np.where(norm(diff,axis=2)<=max_dist,np.dot(moon_los,los),0)
-	blob = np.where(angles>fov_bounds,norm(diff,axis=2),0)
+	angles = np.arccos(np.dot(moon_los,los)/(norm(moon_los,axis=2)*norm(los)))
+	angles = np.where(norm(diff,axis=2)<=max_dist,angles,2*np.pi)
+	blob = np.where(angles<fov/2,1,0)
 	return blob
 
 
@@ -106,11 +103,8 @@ def get_camera_from_coverage(coverage,camera):
 	ctr_los = ctr_xyz/norm(ctr_xyz)
 	#info("CTR_XYZ: {}".format(ctr_xyz))
 	decl = arcsin(ctr_los[2])
-	if decl > np.pi/2:
-		decl -= np.pi
-		ra -= np.pi
-	ra = arccos(ctr_los[0]/cos(decl))
-	#debug("GKM CAMERA LOCATION = {} N, {} E".format(rad2deg(decl),rad2deg(ra)))
+	ra = np.arctan2(ctr_los[1],ctr_los[0])
+	debug("GKM CAMERA LOCATION = {} N, {} E".format(rad2deg(decl),rad2deg(ra)))
 
 	# Finding the furthest extremities
 	pos = ctr_los*RADIUS*1.2
@@ -119,34 +113,34 @@ def get_camera_from_coverage(coverage,camera):
 	blob = get_coverage(pos,los,min([camera.FOV_x,camera.FOV_y]),ra=ra_sec)
 	#info("Blob shape: {}".format(blob.shape))
 	cont = len(np.where(coverage>blob)[0])
-	count = 0
-	while cont > 0 and count < 5:
-		blob_prev = blob
+	while cont > 0 and norm(pos) < 1000*RADIUS:
 		pos*=1.2
 		blob = get_coverage(pos,los,min([camera.FOV_x,camera.FOV_y]),ra=ra_sec)
 		#info("Blob shape: {}".format(blob.shape))
 		cont = len(np.where(coverage>blob)[0])
-		if np.sum(blob) != np.sum(blob_prev):
-			count += 1
-		else:
-			count = 0
-	if np.sum(blob) == np.sum(blob_prev):
+	if norm(pos) >= 1000*RADIUS:
 		warning("GK Method reached Maximum View without covering Target Area")
 	
 	debug("GKM CAMERA LOCATION = {}".format(pos))
+	#debug("CTR_LOS = {}".format(ctr_los))
 	# Build the GKM camera state
 	global_z = los
 	global_x = array([-sin(ra),cos(ra),0])
-	global_y = mu.rot_about(global_z,global_x,np.pi/2)
+	#debug("Global X is: {}".format(global_x))
+	#global_y = mu.rot_about(global_z,global_x,np.pi/2)
+	global_y = np.cross(global_z,global_x)
+	#debug("Global Y is: {}".format(global_y))
 	local_z = array([0,0,1])
 	local_x = array([1,0,0])
-	local_y = array([0,-1,0])
-	dcm = mu.wahbas_problem(array([global_z,global_x,global_y]),
-												array([local_z,local_x,local_y]))
-	
+	local_y = array([0,1,0])
+	dcm = mu.wahbas_problem(
+		array([global_x,global_y,global_z]),
+		array([local_x,local_y,local_z])	
+	)
+	#debug("DCM: {}".format(dcm.T))
 	# Convert to Quaternion and assign to camera
 	quat = Quaternion()
-	quat.fromDCM(dcm.T)
+	quat.fromDCM(dcm)
 	debug("GKM CAMERA QUAT = {}".format(quat))
 	camera.set_state(State(pos,quat))
 

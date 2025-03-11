@@ -331,7 +331,7 @@ def moveSun(obj, sun_los):
 isRendering = False
 MOON_ALBEDO_MAP = None
 EARTH_ALBEDO_MAP = None
-STARS_MAP = None #join(MAP_DIR,"hipp8.tif")
+STARS_MAP = None
 
 
 if __name__ == "__main__":

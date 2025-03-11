@@ -104,7 +104,7 @@ def read_traj_file(filename):
 
 		# Check if Earth quat exists
 			if len(data[15])>0 and len(data[16])>0 and len(data[17])>0 and len(data[18])>0:
-				earth_quat = Quaternion(data[15],np.array(data[16:19],dtype=float))
+				earth_quat = Quaternion(data[15],-np.array(data[16:19],dtype=float))
 			if earth_pos is not None and earth_quat is not None:
 				earth_state = State(position=earth_pos,attitude=earth_quat)
 

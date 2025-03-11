@@ -2,7 +2,7 @@
 import numpy as np
 import pickle
 import os
-from os.path import join,exists,isfile
+from os.path import join,exists,isfile,dirname
 import subprocess as sp
 
 # Local Imports
@@ -11,7 +11,7 @@ from Camera import get_camera
 from Render import Render
 import file_io as io
 from find_mesh import find_mesh
-from build_mesh import build_mesh
+from build_mesh import build_mesh,build_empty_mesh
 from paths import TMP_DIR,MAP_DIR,SRC_DIR
 from Structures import State
 from gkmethod import gkmethod
@@ -79,7 +79,7 @@ def run(args,poses):
 		return 6
 
 	# Create Render Objects
-	renders = create_render_objs(poses,camera,configs,ALLOW_GK,True)
+	renders = create_render_objs(poses,camera,configs,False,True) # Replace this with actual vars after testing
 
 	info("Created {} Render Objects".format(len(renders)))
 
@@ -92,17 +92,7 @@ def run(args,poses):
 
 		# Set the camera to render the mesh
 		if render.mesh_state is None:
-			# Get Blender to render the scene
-			info("Sent Render {}/{} to be rendered".format(i,len(renders)))
-			complete_proc = sp.run(["blender","-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
-
-			# Check for success
-			if complete_proc.returncode != 0:
-				critical("Render #{} failed with error code {}\n\tPickle and Blender files have been left for inspection".format(i,complete_proc.returncode))
-				return 3
-			else:
-				info("Render #{} Completed".format(i))
-				os.remove(PICKLE_FILE)
+			build_empty_mesh(BLEND_FILE)
 
 		else:
 			camera.set_state(render.mesh_state)
@@ -113,18 +103,24 @@ def run(args,poses):
 			mesh,tris,colors = find_mesh(camera)
 			build_mesh(mesh,tris,colors,BLEND_FILE)
 
-			# Get Blender to render the scene
-			info("Sent Render {}/{} to be rendered".format(i+1,len(renders)))
-			complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
+		# Check that any subdirs in the image name exist
+		for pose in render.poses:
+			subdir = join(IMG_LOC,dirname(pose.name))
+			if not exists(subdir):
+				os.makedirs(subdir)
 
-			# Check for success
-			if complete_proc.returncode != 0:
-				critical("Render #{} failed with error code {}\n\tPickle and Blender files have been left for inspection".format(i,complete_proc.returncode))
-				return 3
-			else:
-				info("Render #{} Completed".format(i))
-				os.remove(PICKLE_FILE)
-				os.remove(BLEND_FILE)
+		# Get Blender to render the scene
+		info("Sent Render {}/{} to be rendered".format(i+1,len(renders)))
+		complete_proc = sp.run(["blender","-b",BLEND_FILE,"-P",join(SRC_DIR,"Render.py"),PICKLE_FILE],capture_output=False,stdout=sp.DEVNULL)
+
+		# Check for success
+		if complete_proc.returncode != 0:
+			critical("Render #{} failed with error code {}\n\tPickle and Blender files have been left for inspection".format(i,complete_proc.returncode))
+			return 3
+		else:
+			info("Render #{} Completed".format(i+1))
+			os.remove(PICKLE_FILE)
+			os.remove(BLEND_FILE)
 	return 0
 
 
@@ -135,12 +131,16 @@ def create_render_objs(poses,camera,configs,allow_gk,allow_combine):
 	# Starting with the naive method
 	renders = []
 	if allow_combine:
-		combined_poses,mesh_cameras = pc.combine_poses(poses,camera)
+		thresh = 0.9
+		if not allow_gk:
+			thresh = 1.0
+		combined_poses,mesh_cameras = pc.combine_poses(poses,camera,threshold=thresh)
 		for i,pose_set in enumerate(combined_poses):
 			mesh_cam_state = None
 			if mesh_cameras[i] is not None:
 				mesh_cam_state = mesh_cameras[i].state
 			renders.append(Render(camera,pose_set,mesh_cam_state,configs))
+			info("Added Render {} with {} poses".format(i,len(pose_set)))
 	else:
 		for pose in poses:
 			mesh_cam_state = pose.cam_state

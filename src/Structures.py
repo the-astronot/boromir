@@ -39,43 +39,52 @@ class Quaternion():
 		dcm[2,2] = self.s**2 - self.v[0]**2 - self.v[1]**2 + self.v[2]**2
 		return dcm
 
-	def fromDCM(self,dcm):
-		q1_sq = 0.25*(1+dcm[0,0]-dcm[1,1]-dcm[2,2])
-		q2_sq = 0.25*(1-dcm[0,0]+dcm[1,1]-dcm[2,2])
-		q3_sq = 0.25*(1-dcm[0,0]-dcm[1,1]+dcm[2,2])
-		qs_sq = 0.25*(1+dcm[0,0]+dcm[1,1]+dcm[2,2])
-		max_arg = argmax(array([q1_sq,q2_sq,q3_sq,qs_sq]))
-		if (max_arg == 0):
-			mod = 1/(4*sqrt(q1_sq))
-			self.v[0] = mod*(4*q1_sq)
-			self.v[1] = mod*(dcm[0,1]+dcm[1,0])
-			self.v[2] = mod*(dcm[2,0]+dcm[0,2])
-			self.s = mod*(dcm[1,2]-dcm[2,1])
-		elif (max_arg == 1):
-			mod = 1/(4*sqrt(q2_sq))
-			self.v[0] = mod*(dcm[0,1]+dcm[1,0])
-			self.v[1] = mod*(4*q2_sq)
-			self.v[2] = mod*(dcm[1,2]+dcm[2,1])
-			self.s = mod*(dcm[2,0]-dcm[0,2])
-		elif (max_arg == 2):
-			mod = 1/(4*sqrt(q3_sq))
-			self.v[0] = mod*(dcm[2,0]+dcm[0,2])
-			self.v[1] = mod*(dcm[1,2]+dcm[2,1])
-			self.v[2] = mod*(4*q3_sq)
-			self.s = mod*(dcm[0,1]-dcm[1,0])
-		elif (max_arg == 3):
-			mod = 1/(4*sqrt(qs_sq))
-			self.v[0] = mod*(dcm[1,2]-dcm[2,1])
-			self.v[1] = mod*(dcm[2,0]-dcm[0,2])
-			self.v[2] = mod*(dcm[0,1]-dcm[1,0])
-			self.s = mod*(4*qs_sq)
-		#print(self.s,self.v)
+
+	def fromDCM(self,dcm,k=0.25):
+		# Calculate the tmp vars
+		tmps = 1 + dcm[0,0] + dcm[1,1] + dcm[2,2]
+		tmpi = 1 + dcm[0,0] - dcm[1,1] - dcm[2,2]
+		tmpj = 1 - dcm[0,0] + dcm[1,1] - dcm[2,2]
+		tmpk = 1 - dcm[0,0] - dcm[1,1] + dcm[2,2]
+
+		if tmps > k:
+			self.s = np.sqrt(tmps/4)
+			self.v[0] = (dcm[1,2]-dcm[2,1])/(4*self.s)
+			self.v[1] = (dcm[2,0]-dcm[0,2])/(4*self.s)
+			self.v[2] = (dcm[0,1]-dcm[1,0])/(4*self.s)
+
+		elif tmpi > k:
+			self.v[0] = np.sqrt(tmpi/4)
+			self.s = (dcm[1,2]-dcm[2,1])/(4*self.v[0])
+			self.v[1] = (dcm[0,1]+dcm[1,0])/(4*self.v[0])
+			self.v[2] = (dcm[2,0]+dcm[0,2])/(4*self.v[0])
+
+		elif tmpj > k:
+			self.v[1] = np.sqrt(tmpj/4)
+			self.s = (dcm[2,0]-dcm[0,2])/(4*self.v[1])
+			self.v[0] = (dcm[0,1]+dcm[1,0])/(4*self.v[1])
+			self.v[2] = (dcm[1,2]+dcm[2,1])/(4*self.v[1])
+
+		elif tmpk > k:
+			self.v[2] = np.sqrt(tmpk/4)
+			self.s = (dcm[0,1]-dcm[1,0])/(4*self.v[2])
+			self.v[0] = (dcm[2,0]+dcm[0,2])/(4*self.v[2])
+			self.v[1] = (dcm[1,2]+dcm[2,1])/(4*self.v[2])
+
+		else:
+			# Throw error
+			print("ERROR Converting from dcm")
+			return
 		self.normalize()
+		return
 
 	def normalize(self):
 		total = sqrt(self.s**2+self.v[0]**2+self.v[1]**2+self.v[2]**2)
 		self.s = self.s/total
 		self.v = self.v/total
+		if self.s < 0:
+			self.s = -self.s
+			self.v = -self.v
 
 	def toArray(self):
 		return array([self.s,self.v[0],self.v[1],self.v[2]])
@@ -86,6 +95,20 @@ class Quaternion():
 		"""
 		self.s = float(arr[0])
 		self.v = np.array(arr[1:4],dtype=float)
+		self.normalize()
+		return
+
+	def __eq__(self,other):
+		if abs(self.s) != abs(other.s):
+			return False
+		if not np.all(abs(self.v) == abs(other.v)):
+			return False
+		alt = Quaternion(s=-other.s,v=-other.v)
+		if self.s == other.s and np.all(self.v == other.v):
+			return True
+		if self.s == alt.s and np.all(self.v == alt.v):
+			return True
+		return False
 
 
 def quat_mult(q1,q2):
@@ -96,7 +119,6 @@ def quat_mult(q1,q2):
 	q3.s = q1.s*q2.s-(np.sum(q1.v*q2.v))
 	q3.v = q1.s*q2.v + q2.s*q1.v + np.cross(q1.v,q2.v)
 	return q3
-
 
 
 class State():
@@ -117,3 +139,13 @@ class State():
 		new_state.position = self.position
 		new_state.attitude = Quaternion(self.attitude.s,self.attitude.v)
 		return new_state
+
+
+if __name__ == "__main__":
+	quat = np.array([-0.541570454408883,0.454644303726942,-0.454644303726942,0.541570454408883])
+	q1 = Quaternion()
+	q2 = Quaternion()
+	q1.fromArray(quat)
+	q2.fromDCM(q1.toDCM())
+	print("Q1 is: {}".format(q1))
+	print("Q2 is: {}".format(q2))

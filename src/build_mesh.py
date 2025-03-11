@@ -33,6 +33,24 @@ def build_mesh(verts,faces,colors,outfile):
 	return 0
 
 
+def build_empty_mesh(outfile):
+	"""
+		Build a file without a mesh
+	"""
+	# Delete old data, if exists
+	if "Moon" in bpy.data.meshes:
+		mesh = bpy.data.meshes["Moon"]
+		bpy.data.meshes.remove(mesh)
+	if "Moon" in bpy.data.objects:
+		obj = bpy.data.objects["Moon"]
+		bpy.data.objects.remove(obj)
+
+	bpy.ops.wm.save_as_mainfile(filepath=outfile)
+	info("Saved blender file")
+
+	return 0
+
+
 def convert_to_mesh(vertices,faces,colors):
 	"""
 		This function builds the mesh via lower-level API calls
