@@ -219,7 +219,7 @@ def process_trajectory(args):
 	args.camera = io.check_for_file(args.camera,CAMERA_DIR)
 	args.blender = io.check_for_file(args.blender,BLENDER_CONF_DIR)
 	if args.job is None: # If not supplied, job name is filename w/o ext
-		args.job = basename(args.filename).rsplit(".")[0]
+		args.job = basename(args.filename).rsplit(".",1)[0]
 
 	# Confirm job name/image directory
 	status = io.try_makedir(join(args.outdir,args.job))
