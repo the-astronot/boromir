@@ -169,8 +169,8 @@ def setup(camera,config):
 	sun.data.energy = float(config["sun"]["energy"])
 	sun.data.color = np.array(config["sun"]["color"],dtype=np.float32)
 	sun.data.angle = float(config["sun"]["angle"])
-	sun.data.use_contact_shadow = True
-	sun.data.shadow_trace_distance = np.inf
+	# sun.data.use_contact_shadow = True
+	# sun.data.shadow_trace_distance = np.inf
 	sun.data.shadow_cascade_max_distance = np.inf
 	sun.rotation_mode = "YXZ"
 
